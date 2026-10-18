@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VAWES - könyvtár</title>
+<link rel="stylesheet" href="konyvtar.css">
+</head>
+<body>
+
+<div class="main">
+  <aside class="sidebar">
+    <div class="brand">VAWES</div>
+    <nav>
+      <a href="VAWES%20-%20lej%C3%A1tsz%C3%B3.html">Főoldal</a>
+      <a href="kereses.html">Keresés</a>
+      <a href="konyvtar.html" class="active">Könyvtár</a>
+    </nav>
+    <p class="label">Lejátszási listák</p>
+    <a class="pl-item" href="VAWES%20-%20lej%C3%A1tsz%C3%B3.html"><span class="cover bg-violet"></span>Chill Waves</a>
+    <a class="pl-item" href="#"><span class="cover bg-cyan"></span>Night Drive</a>
+    <a class="pl-item" href="#"><span class="cover bg-pink"></span>Fókusz</a>
+    <a class="pl-item" href="#"><span class="cover bg-orange"></span>Új felfedezések</a>
+  </aside>
+
+  <main class="content">
+    <div class="page-head">
+      <div>
+        <h1>Könyvtár</h1>
+        <p class="meta" id="summary"></p>
+      </div>
+    </div>
+
+    <div class="tools">
+      <button class="chip on" data-filter="all">Mind</button>
+      <button class="chip" data-filter="mine">Saját</button>
+      <button class="chip" data-filter="vawes">VAWES válogatás</button>
+      <select class="search" id="sort" aria-label="Rendezés">
+        <option value="recent">Legutóbb hallgatott</option>
+        <option value="name">Név szerint</option>
+        <option value="length">Hossz szerint</option>
+      </select>
+      <input class="search" id="q" type="search" placeholder="Keresés a listák között" aria-label="Keresés a listák között">
+    </div>
+
+    <section class="grid" id="grid"></section>
+    <p class="empty hidden" id="empty">Nincs találat. Próbálj másik keresőszót, vagy válaszd a Mind szűrőt.</p>
+  </main>
+</div>
+
+<footer class="player">
+  <div class="track-info">
+    <span class="cover sm bg-violet"></span>
+    <div><p>Midnight Waves</p><p class="muted">VAWES Mix</p></div>
+  </div>
+  <div class="controls">
+    <button aria-label="Előző">⏮</button>
+    <button id="playBtn" aria-label="Lejátszás">▶</button>
+    <button aria-label="Következő">⏭</button>
+  </div>
+  <div class="progress">
+    <span>1:24</span>
+    <div class="bar"><i></i></div>
+    <span>3:31</span>
+  </div>
+</footer>
+
+<script>
+  // Mentett lejátszási listák (szerkeszthető adatok)
+  const playlists = [
+    { name:'Chill Waves',      color:'bg-violet', tracks:6, minutes:21, type:'vawes', recent:1, href:'VAWES%20-%20lej%C3%A1tsz%C3%B3.html' },
+    { name:'Night Drive',      color:'bg-cyan', tracks:12, minutes:44, type:'mine',  recent:2, href:'#' },
+    { name:'Fókusz',           color:'bg-pink', tracks:9,  minutes:38, type:'mine',  recent:3, href:'#' },
+    { name:'Új felfedezések',  color:'bg-orange', tracks:15, minutes:56, type:'vawes', recent:4, href:'#' },
+    { name:'Reggeli futás',    color:'bg-green', tracks:10, minutes:33, type:'mine',  recent:5, href:'#' },
+    { name:'Esti nyugalom',    color:'bg-blue', tracks:8,  minutes:29, type:'vawes', recent:6, href:'#' },
+    { name:'Hétvégi hangulat', color:'bg-yellow', tracks:14, minutes:51, type:'mine',  recent:7, href:'#' },
+    { name:'Tanuláshoz',       color:'bg-red', tracks:11, minutes:47, type:'mine',  recent:8, href:'#' }
+  ];
+
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  const summary = document.getElementById('summary');
+  const q = document.getElementById('q');
+  const sort = document.getElementById('sort');
+  let filter = 'all';
+
+  function render(){
+    const term = q.value.trim().toLowerCase();
+    let list = playlists.filter(p =>
+      (filter === 'all' || p.type === filter) && p.name.toLowerCase().includes(term)
+    );
+    if (sort.value === 'name') list.sort((a,b) => a.name.localeCompare(b.name, 'hu'));
+    else if (sort.value === 'length') list.sort((a,b) => b.minutes - a.minutes);
+    else list.sort((a,b) => a.recent - b.recent);
+
+    grid.innerHTML = '';
+    list.forEach(p => {
+      const a = document.createElement('a');
+      a.className = 'card';
+      a.href = p.href;
+      a.innerHTML = '<div class="art ' + p.color + '"></div>' +
+                    '<h3></h3><p class="muted">' + p.tracks + ' szám, ' + p.minutes + ' perc</p>';
+      a.querySelector('h3').textContent = p.name;
+      grid.appendChild(a);
+    });
+    empty.classList.toggle('hidden', list.length > 0);
+    summary.textContent = list.length + ' mentett lejátszási lista';
+  }
+
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
+    c.classList.add('on');
+    filter = c.dataset.filter;
+    render();
+  }));
+  q.addEventListener('input', render);
+  sort.addEventListener('change', render);
+  render();
+
+  const btn = document.getElementById('playBtn');
+  btn.addEventListener('click', () => { btn.textContent = btn.textContent === '▶' ? '⏸' : '▶'; });
+</script>
+</body>
+</html>
