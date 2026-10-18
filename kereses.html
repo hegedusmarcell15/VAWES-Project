@@ -60,5 +60,9 @@
     <span id="npLen">3:31</span>
   </div>
 </footer>
+<script>
+  const btn = document.getElementById('playBtn');
+  btn.addEventListener('click', () => { btn.textContent = btn.textContent === '▶' ? '⏸' : '▶'; });
+</script>
 </body>
 </html>
