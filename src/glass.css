@@ -338,13 +338,20 @@ mark{background:none; color:var(--pink); font-weight:bold}
 .mood-card:hover .icon{transform:translate(2px,-2px)}
 
 @media (max-width:720px){
-  .app{height:auto; min-height:100vh; padding:.55rem; gap:.55rem; overflow-x:hidden; overflow-y:auto}
-  .main{display:block; min-height:0}
-  .sidebar{display:none}
-  .content{width:100%; min-height:calc(100vh - 9rem); padding:.85rem; border-radius:20px; overflow-x:hidden}
+  .app{height:auto; min-height:100vh; padding:.55rem; gap:.55rem; overflow-x:clip; overflow-y:visible}
+  .main{display:block; min-height:0; flex:none; padding-bottom:0}
+  .sidebar{position:fixed; left:.55rem; right:.55rem; bottom:.55rem; z-index:12; display:flex; flex-direction:row; align-items:center; gap:.35rem; width:auto; height:4rem; padding:.45rem; border-radius:20px; overflow:visible}
+  .sidebar .brand,.sidebar>.label,.sidebar>.pl-item,.language-picker{display:none}
+  .sidebar nav{display:flex; flex:1; align-items:stretch; gap:.2rem}
+  .sidebar nav a{flex:1; display:grid; place-items:center; min-width:0; margin:0; padding:.55rem .3rem; border-radius:13px; font-size:.72rem; text-align:center}
+  .profile-area{width:auto; margin:0; padding:0; border:0}
+  .profile-trigger{justify-content:center; width:3rem; height:3rem; padding:0; border-radius:14px}
+  .profile-trigger-copy,.profile-trigger>.icon{display:none}
+  .profile-menu{left:auto; right:0; bottom:calc(100% + .6rem); width:min(275px,calc(100vw - 1.1rem))}
+  .content{width:100%; min-height:0; height:auto; padding:.85rem .85rem calc(10rem + env(safe-area-inset-bottom)); border-radius:20px; overflow:visible}
   .progress{width:100%; min-width:0; order:3; gap:.45rem}
   .col-album{display:none}
-  .player{width:100%; border-radius:22px; padding:.65rem .8rem .7rem; flex-wrap:wrap; row-gap:.45rem; column-gap:.65rem}
+  .player{position:fixed; left:.55rem; right:.55rem; bottom:4.75rem; z-index:11; width:auto; margin:0; border-radius:22px; padding:.65rem .8rem .7rem; flex-wrap:wrap; row-gap:.45rem; column-gap:.65rem}
   .track-info{width:auto; min-width:0; flex:1}
   .track-info>div{min-width:0}
   .track-info p{max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
@@ -375,7 +382,7 @@ mark{background:none; color:var(--pink); font-weight:bold}
   .appearance-modal{max-height:calc(100vh - 2rem); overflow-y:auto; padding:1rem}
 }
 @media (max-width:420px){
-  .content{padding:.7rem}
+  .content{padding:.7rem .7rem calc(10rem + env(safe-area-inset-bottom))}
   .welcome{min-height:235px; padding:1rem}
   .welcome-copy{max-width:72%}
   .welcome-orb{right:-3.2rem; bottom:-2.2rem; width:125px; height:125px}
