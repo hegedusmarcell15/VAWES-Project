@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
-import { usePlayer } from '../PlayerContext.jsx'
+import { usePlayerActions, usePlayerState } from '../PlayerContext.jsx'
 import { playlists, fmt } from '../data.js'
 import Cover from './Cover.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
 import Icon from './Icon.jsx'
 
 export default function Player() {
-  const { current, playing, elapsed, toggle, seek, next, prev } = usePlayer()
+  const { current, playing, elapsed } = usePlayerState()
+  const { toggle, seek, next, prev } = usePlayerActions()
   const [playStyle, setPlayStyle] = useState(() => localStorage.getItem('vawes-play-style') ?? 'prism')
   const { t } = useLanguage()
   useEffect(() => {

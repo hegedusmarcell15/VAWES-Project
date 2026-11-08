@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { playlists, songs, fmt, norm } from '../data.js'
-import { usePlayer } from '../PlayerContext.jsx'
+import { usePlayerActions, usePlayerState } from '../PlayerContext.jsx'
 import Cover from '../components/Cover.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
 import Icon from '../components/Icon.jsx'
@@ -16,7 +16,8 @@ export default function Search() {
   const [q, setQ] = useState('')
   const [chip, setChip] = useState('all')
   const searchInputRef = useRef(null)
-  const { current, play } = usePlayer()
+  const { current } = usePlayerState()
+  const { play } = usePlayerActions()
   const { t, playlistName } = useLanguage()
   const term = q.trim()
   const active = term !== '' || chip !== 'all'
