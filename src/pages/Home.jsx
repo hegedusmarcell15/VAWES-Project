@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { playlists, songs, fmt } from '../data.js'
 import heroHeadlines from '../hero-headlines.json'
 import { usePlayer } from '../PlayerContext.jsx'
@@ -15,18 +15,26 @@ function getGreeting(t) {
   return t('night')
 }
 
-function getHeadline() {
-  const previous = localStorage.getItem('vawes-hero-headline')
-  const available = heroHeadlines.filter((headline) => headline !== previous)
-  const next = available[Math.floor(Math.random() * available.length)] ?? heroHeadlines[0]
-  localStorage.setItem('vawes-hero-headline', next)
+function getHeadline(language) {
+  const headlines = heroHeadlines[language] ?? heroHeadlines.hu
+  const storageKey = `vawes-hero-headline-${language}`
+  const previous = localStorage.getItem(storageKey)
+  const available = headlines.filter((headline) => headline !== previous)
+  const next = available[Math.floor(Math.random() * available.length)] ?? headlines[0]
+  localStorage.setItem(storageKey, next)
   return next
 }
 
 function DiscoverHome() {
   const { current, play } = usePlayer()
-  const { t, playlistName } = useLanguage()
-  const [headline] = useState(getHeadline)
+  const { language, t, playlistName } = useLanguage()
+  const [headline, setHeadline] = useState(() => getHeadline(language))
+  const headlineLanguage = useRef(language)
+  useEffect(() => {
+    if (headlineLanguage.current === language) return
+    headlineLanguage.current = language
+    setHeadline(getHeadline(language))
+  }, [language])
   const [avatar, setAvatar] = useState(() => localStorage.getItem('vawes-avatar') ?? '')
   useEffect(() => {
     const updateAvatar = (event) => setAvatar(event.detail ?? '')
