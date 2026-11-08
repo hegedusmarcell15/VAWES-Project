@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VAWES - lejátszó</title>
+<link rel="stylesheet" href="lejatszo.css">
+</head>
+<body>
+
+<div class="main">
+  <aside class="sidebar">
+    <div class="brand">VAWES</div>
+    <nav>
+      <a href="VAWES.html" class="active">Főoldal</a>
+      <a href="kereses.html">Keresés</a>
+      <a href="konyvtar.html">Könyvtár</a>
+    </nav>
+    <p class="label">Lejátszási listák</p>
+    <div class="pl-item"><span class="cover bg-violet"></span>Chill Waves</div>
+    <div class="pl-item"><span class="cover bg-cyan"></span>Night Drive</div>
+    <div class="pl-item"><span class="cover bg-pink"></span>Fókusz</div>
+    <div class="pl-item"><span class="cover bg-orange"></span>Új felfedezések</div>
+  </aside>
+
+  <main class="content">
+    <div class="playlist-header">
+      <div class="cover big bg-violet"></div>
+      <div>
+        <p class="meta">Lejátszási lista</p>
+        <h1>Chill Waves</h1>
+        <p class="meta">VAWES · 6 szám, 21 perc</p>
+      </div>
+    </div>
+
+    <table>
+      <thead><tr><th>#</th><th>Cím</th><th>Album</th><th>Hossz</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Midnight Waves</td><td>VAWES Mix</td><td>3:31</td></tr>
+        <tr><td>2</td><td>Late Studio</td><td>Chill Waves</td><td>2:58</td></tr>
+        <tr><td>3</td><td>Sunday Reset</td><td>Chill Waves</td><td>4:02</td></tr>
+        <tr><td>4</td><td>Deep Focus</td><td>Fókusz</td><td>3:47</td></tr>
+        <tr><td>5</td><td>Morning Run</td><td>Night Drive</td><td>3:12</td></tr>
+        <tr><td>6</td><td>Slow Fade</td><td>Chill Waves</td><td>3:40</td></tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+
+<footer class="player">
+  <div class="track-info">
+    <span class="cover sm bg-violet"></span>
+    <div><p>Midnight Waves</p><p class="muted">VAWES Mix</p></div>
+  </div>
+  <div class="controls">
+    <button aria-label="Előző">⏮</button>
+    <button id="playBtn" aria-label="Lejátszás">▶</button>
+    <button aria-label="Következő">⏭</button>
+  </div>
+  <div class="progress">
+    <span>1:24</span>
+    <div class="bar"><i></i></div>
+    <span>3:31</span>
+  </div>
+</footer>
+
+<script>
+  const btn = document.getElementById('playBtn');
+  btn.addEventListener('click', () => { btn.textContent = btn.textContent === '▶' ? '⏸' : '▶'; });
+</script>
+</body>
+</html>
