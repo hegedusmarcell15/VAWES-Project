@@ -347,7 +347,7 @@ mark{background:none; color:var(--pink); font-weight:bold}
   .profile-area{width:auto; margin:0; padding:0; border:0}
   .profile-trigger{justify-content:center; width:3rem; height:3rem; padding:0; border-radius:14px}
   .profile-trigger-copy,.profile-trigger>.icon{display:none}
-  .profile-menu{left:auto; right:0; bottom:calc(100% + .6rem); width:min(275px,calc(100vw - 1.1rem))}
+  .profile-menu{left:auto; right:0; bottom:calc(100% + 6.3rem); width:min(275px,calc(100vw - 1.1rem)); max-height:calc(100vh - 8.1rem); overflow-y:auto; overscroll-behavior:contain}
   .content{width:100%; min-height:0; height:auto; padding:.85rem .85rem calc(10rem + env(safe-area-inset-bottom)); border-radius:20px; overflow:visible}
   .progress{width:100%; min-width:0; order:3; gap:.45rem}
   .col-album{display:none}
