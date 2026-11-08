@@ -4,8 +4,10 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './glass.css'
 
+const basename = window.location.hostname === 'hegedusmarcell15.github.io' ? '/VAWES-Project' : ''
+
 createRoot(document.getElementById('root')).render(
-  <BrowserRouter basename={import.meta.env.BASE_URL}>
+  <BrowserRouter basename={basename}>
     <App />
   </BrowserRouter>
 )
