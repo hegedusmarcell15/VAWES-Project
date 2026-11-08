@@ -13,8 +13,6 @@ export default function Layout() {
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false)
   const [avatar, setAvatar] = useState(() => localStorage.getItem('vawes-avatar') ?? '')
   const [avatarError, setAvatarError] = useState('')
-  const [wallpaper, setWallpaper] = useState(() => localStorage.getItem('vawes-wallpaper') ?? '')
-  const [wallpaperError, setWallpaperError] = useState('')
   const [appearanceOpen, setAppearanceOpen] = useState(false)
   const [theme, setTheme] = useState(() => localStorage.getItem('vawes-theme') ?? 'aurora')
   const [playStyle, setPlayStyle] = useState(() => localStorage.getItem('vawes-play-style') ?? 'prism')
@@ -30,7 +28,6 @@ export default function Layout() {
   })
   const languageRef = useRef(null)
   const profileRef = useRef(null)
-  const mobileProfileRef = useRef(null)
   const languages = [['hu', 'Magyar'], ['en', 'English'], ['zh', '中文']]
   const themes = {
     aurora: { label: 'Aurora', background: '#0b0a1a', violet: '#7c5cff', cyan: '#2dd4ff', pink: '#ff4fd8' },
@@ -87,57 +84,6 @@ export default function Layout() {
     window.dispatchEvent(new CustomEvent('vawes-avatar-change', { detail: '' }))
     setAvatarError('')
   }
-  const handleWallpaperChange = (event) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
-    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-      setWallpaperError(t('wallpaperTypeError'))
-      return
-    }
-    if (file.size > 8 * 1024 * 1024) {
-      setWallpaperError(t('wallpaperSizeError'))
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result !== 'string') {
-        setWallpaperError(t('wallpaperReadError'))
-        return
-      }
-      const image = new Image()
-      image.onload = () => {
-        const size = 1920
-        const scale = Math.min(1, size / Math.max(image.naturalWidth, image.naturalHeight))
-        const canvas = document.createElement('canvas')
-        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
-        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
-        const context = canvas.getContext('2d')
-        if (!context) {
-          setWallpaperError(t('wallpaperReadError'))
-          return
-        }
-        context.drawImage(image, 0, 0, canvas.width, canvas.height)
-        const optimized = canvas.toDataURL('image/jpeg', .78)
-        try {
-          localStorage.setItem('vawes-wallpaper', optimized)
-          setWallpaper(optimized)
-          setWallpaperError('')
-        } catch {
-          setWallpaperError(t('wallpaperStorageError'))
-        }
-      }
-      image.onerror = () => setWallpaperError(t('wallpaperReadError'))
-      image.src = reader.result
-    }
-    reader.onerror = () => setWallpaperError(t('wallpaperReadError'))
-    reader.readAsDataURL(file)
-  }
-  const removeWallpaper = () => {
-    setWallpaper('')
-    localStorage.removeItem('vawes-wallpaper')
-    setWallpaperError('')
-  }
 
   useEffect(() => {
     const selected = theme === 'custom' ? customTheme : themes[theme] ?? themes.aurora
@@ -146,11 +92,9 @@ export default function Layout() {
     root.style.setProperty('--violet', selected.violet)
     root.style.setProperty('--cyan', selected.cyan)
     root.style.setProperty('--pink', selected.pink)
-    root.style.setProperty('--wallpaper-image', wallpaper ? `url("${wallpaper}")` : 'none')
-    root.style.setProperty('--wallpaper-opacity', wallpaper ? '.72' : '0')
     localStorage.setItem('vawes-theme', theme)
     localStorage.setItem('vawes-custom-theme', JSON.stringify(customTheme))
-  }, [theme, customTheme, wallpaper])
+  }, [theme, customTheme])
 
   const updateCustomColor = (key, value) => {
     if (!/^#[0-9a-f]{6}$/i.test(value)) return
@@ -166,7 +110,7 @@ export default function Layout() {
   useEffect(() => {
     const closeLanguageMenu = (event) => {
       if (!languageRef.current?.contains(event.target)) setLanguageOpen(false)
-      if (!profileRef.current?.contains(event.target) && !mobileProfileRef.current?.contains(event.target)) setProfileOpen(false)
+      if (!profileRef.current?.contains(event.target)) setProfileOpen(false)
     }
     document.addEventListener('pointerdown', closeLanguageMenu)
     const closeAppearance = (event) => {
@@ -284,30 +228,6 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
-      <nav className="mobile-nav glass" aria-label={t('navigation')}>
-        <NavLink to="/" end><Icon name="home" size={18} /><span>{t('home')}</span></NavLink>
-        <NavLink to="/kereses"><Icon name="search" size={18} /><span>{t('search')}</span></NavLink>
-        <NavLink to="/konyvtar"><Icon name="library" size={18} /><span>{t('library')}</span></NavLink>
-        <button className={`mobile-account-trigger ${profileOpen ? 'active' : ''}`} type="button" aria-expanded={profileOpen} aria-haspopup="menu" aria-label={t('account')} onClick={() => setProfileOpen((open) => !open)}>
-          <span className="profile-avatar">{avatar ? <img src={avatar} alt="" /> : <Icon name="user" size={18} />}</span>
-          <span>{t('account')}</span>
-        </button>
-        {profileOpen && (
-          <div className="mobile-profile-menu glass" ref={mobileProfileRef} role="menu" aria-label={t('accountSettings')}>
-            <div className="profile-summary">
-              <span className="profile-avatar">{avatar ? <img src={avatar} alt="" /> : <Icon name="user" size={18} />}</span>
-              <span><strong>User</strong><small>{t('accountReady')}</small></span>
-            </div>
-            <p className="profile-description">{t('accountDescription')}</p>
-            <button type="button" className="profile-option" role="menuitem" onClick={() => { setProfileOpen(false); setAvatarError(''); setProfileSettingsOpen(true) }}><Icon name="user" size={15} /><span>{t('profile')}</span></button>
-            <button type="button" className="profile-option" role="menuitem" onClick={() => { setProfileOpen(false); setAppearanceOpen(true) }}><Icon name="settings" size={15} /><span>{t('preferences')}</span></button>
-            <button type="button" className="profile-option" role="menuitem" onClick={() => setProfileOpen(false)}><Icon name="settings" size={15} /><span>{t('playback')}</span></button>
-            <button type="button" className="profile-option" role="menuitem" onClick={() => setProfileOpen(false)}><Icon name="settings" size={15} /><span>{t('privacy')}</span></button>
-            <button type="button" className="profile-option" role="menuitem" onClick={() => setProfileOpen(false)}><Icon name="user" size={15} /><span>{t('help')}</span></button>
-            <button type="button" className="profile-option profile-signout" role="menuitem" onClick={() => setProfileOpen(false)}><Icon name="user" size={15} /><span>{t('signOut')}</span></button>
-          </div>
-        )}
-      </nav>
       <Player />
       {appearanceOpen && (
         <div className="appearance-backdrop" role="presentation" onMouseDown={(event) => {
@@ -355,16 +275,6 @@ export default function Layout() {
                   <span className="color-value"><input type="color" value={customTheme[key]} onChange={(event) => updateCustomColor(key, event.target.value)} /><code>{customTheme[key]}</code></span>
                 </label>
               ))}
-            </div>
-            <div className="wallpaper-section">
-              <p className="appearance-label">{t('wallpaper')}</p>
-              <label className="upload-button wallpaper-upload">
-                <Icon name="image" size={15} />{t('chooseWallpaper')}
-                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleWallpaperChange} />
-              </label>
-              {wallpaper && <button className="remove-photo" type="button" onClick={removeWallpaper}>{t('removeWallpaper')}</button>}
-              {wallpaperError && <p className="avatar-error" role="alert">{wallpaperError}</p>}
-              <p className="appearance-copy profile-file-hint">{t('wallpaperHint')}</p>
             </div>
             <div className="play-style-section">
               <p className="appearance-label">{t('playButtonStyle')}</p>
