@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { playlists, songs, fmt } from '../data.js'
 import heroHeadlines from '../hero-headlines.json'
-import { usePlayer } from '../PlayerContext.jsx'
+import { usePlayerActions, usePlayerState } from '../PlayerContext.jsx'
 import Cover from '../components/Cover.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
 import Icon from '../components/Icon.jsx'
@@ -26,7 +26,8 @@ function getHeadline(language) {
 }
 
 function DiscoverHome() {
-  const { current, play } = usePlayer()
+  const { current } = usePlayerState()
+  const { play } = usePlayerActions()
   const { language, t, playlistName } = useLanguage()
   const [headline, setHeadline] = useState(() => getHeadline(language))
   const headlineLanguage = useRef(language)
@@ -120,7 +121,8 @@ export default function Home() {
   const { t, playlistName } = useLanguage()
   const pl = playlists.find((p) => p.id === id) ?? playlists[0]
   const list = useMemo(() => songs.filter((s) => s.playlist === pl.id), [pl.id])
-  const { current, play } = usePlayer()
+  const { current } = usePlayerState()
+  const { play } = usePlayerActions()
   if (!id) return <DiscoverHome />
 
   return (
