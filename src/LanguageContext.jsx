@@ -3,7 +3,7 @@ import { playlists } from './data.js'
 
 const translations = {
   hu: {
-    home: 'Főoldal', search: 'Keresés', library: 'Könyvtár', playlists: 'Lejátszási listák',
+    home: 'Főoldal', search: 'Keresés', library: 'Könyvtár', navigation: 'Navigáció', playlists: 'Lejátszási listák',
     all: 'Mind', mine: 'Saját', vawesMix: 'VAWES válogatás', searchPlaceholder: 'Szám, album vagy lista keresése',
     clear: 'Törlés', browse: 'Böngészés lista szerint', results: 'Találatok', title: 'Cím', album: 'Album',
     duration: 'Hossz', noResults: 'Nincs találat erre:', tryAgain: 'Próbálj másik keresőszót.',
@@ -23,7 +23,7 @@ const translations = {
     accountReady: 'Helyi profil', accountDescription: 'A fiókkezelés hamarosan elérhető.', profileSettings: 'Profilbeállítások', profilePhotoDescription: 'A profilképed itt jelenik meg az alkalmazásban.', choosePhoto: 'Kép feltöltése', removePhoto: 'Kép eltávolítása', profilePhotoHint: 'PNG vagy JPG, legfeljebb 5 MB.', avatarTypeError: 'Csak PNG vagy JPG kép tölthető fel.', avatarSizeError: 'A kép mérete legfeljebb 5 MB lehet.', avatarReadError: 'A kép betöltése nem sikerült.', appearance: 'Megjelenés', appearanceDescription: 'Válassz egy színvilágot az alkalmazás üvegfelületéhez.', customTheme: 'Saját téma', customColors: 'Saját színek', backgroundColor: 'Háttér', violetColor: 'Lila kiemelés', cyanColor: 'Cián kiemelés', pinkColor: 'Rózsaszín kiemelés', playButtonStyle: 'Lejátszógomb stílusa', stylePrism: 'Prizma', styleHalo: 'Glória', styleSolid: 'Fényes', styleMinimal: 'Minimalista', glassIntensity: 'Üvegfelület', glassIntensityDescription: 'Aktív liquid-glass stílus', active: 'Aktív', close: 'Bezárás',
   },
   en: {
-    home: 'Home', search: 'Search', library: 'Library', playlists: 'Playlists',
+    home: 'Home', search: 'Search', library: 'Library', navigation: 'Navigation', playlists: 'Playlists',
     all: 'All', mine: 'Mine', vawesMix: 'VAWES selection', searchPlaceholder: 'Search tracks, albums or playlists',
     clear: 'Clear', browse: 'Browse by playlist', results: 'Results', title: 'Title', album: 'Album',
     duration: 'Length', noResults: 'No results for:', tryAgain: 'Try another search term.',
@@ -43,7 +43,7 @@ const translations = {
     accountReady: 'Local profile', accountDescription: 'Account management will be available soon.', profileSettings: 'Profile settings', profilePhotoDescription: 'Your profile photo appears here across the app.', choosePhoto: 'Upload image', removePhoto: 'Remove image', profilePhotoHint: 'PNG or JPG, up to 5 MB.', avatarTypeError: 'Only PNG or JPG images are supported.', avatarSizeError: 'The image must be 5 MB or smaller.', avatarReadError: 'The image could not be loaded.', appearance: 'Appearance', appearanceDescription: 'Choose a color mood for the app glass surfaces.', customTheme: 'Custom theme', customColors: 'Custom colors', backgroundColor: 'Background', violetColor: 'Violet accent', cyanColor: 'Cyan accent', pinkColor: 'Pink accent', playButtonStyle: 'Play button style', stylePrism: 'Prism', styleHalo: 'Halo', styleSolid: 'Glossy', styleMinimal: 'Minimal', glassIntensity: 'Glass surface', glassIntensityDescription: 'Liquid-glass styling is active', active: 'Active', close: 'Close',
   },
   zh: {
-    home: '首页', search: '搜索', library: '音乐库', playlists: '播放列表',
+    home: '首页', search: '搜索', library: '音乐库', navigation: '导航', playlists: '播放列表',
     all: '全部', mine: '我的', vawesMix: 'VAWES精选', searchPlaceholder: '搜索歌曲、专辑或播放列表',
     clear: '清除', browse: '按播放列表浏览', results: '搜索结果', title: '歌曲', album: '专辑',
     duration: '时长', noResults: '没有找到：', tryAgain: '试试其他关键词。',

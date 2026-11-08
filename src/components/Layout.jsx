@@ -283,6 +283,11 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+      <nav className="mobile-nav glass" aria-label={t('navigation')}>
+        <NavLink to="/" end><Icon name="home" size={18} /><span>{t('home')}</span></NavLink>
+        <NavLink to="/kereses"><Icon name="search" size={18} /><span>{t('search')}</span></NavLink>
+        <NavLink to="/konyvtar"><Icon name="library" size={18} /><span>{t('library')}</span></NavLink>
+      </nav>
       <Player />
       {appearanceOpen && (
         <div className="appearance-backdrop" role="presentation" onMouseDown={(event) => {
