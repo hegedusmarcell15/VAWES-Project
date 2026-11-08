@@ -30,6 +30,7 @@ export default function Layout() {
   })
   const languageRef = useRef(null)
   const profileRef = useRef(null)
+  const mobileProfileRef = useRef(null)
   const languages = [['hu', 'Magyar'], ['en', 'English'], ['zh', '中文']]
   const themes = {
     aurora: { label: 'Aurora', background: '#0b0a1a', violet: '#7c5cff', cyan: '#2dd4ff', pink: '#ff4fd8' },
@@ -165,7 +166,7 @@ export default function Layout() {
   useEffect(() => {
     const closeLanguageMenu = (event) => {
       if (!languageRef.current?.contains(event.target)) setLanguageOpen(false)
-      if (!profileRef.current?.contains(event.target)) setProfileOpen(false)
+      if (!profileRef.current?.contains(event.target) && !mobileProfileRef.current?.contains(event.target)) setProfileOpen(false)
     }
     document.addEventListener('pointerdown', closeLanguageMenu)
     const closeAppearance = (event) => {
@@ -287,6 +288,25 @@ export default function Layout() {
         <NavLink to="/" end><Icon name="home" size={18} /><span>{t('home')}</span></NavLink>
         <NavLink to="/kereses"><Icon name="search" size={18} /><span>{t('search')}</span></NavLink>
         <NavLink to="/konyvtar"><Icon name="library" size={18} /><span>{t('library')}</span></NavLink>
+        <button className={`mobile-account-trigger ${profileOpen ? 'active' : ''}`} type="button" aria-expanded={profileOpen} aria-haspopup="menu" aria-label={t('account')} onClick={() => setProfileOpen((open) => !open)}>
+          <span className="profile-avatar">{avatar ? <img src={avatar} alt="" /> : <Icon name="user" size={18} />}</span>
+          <span>{t('account')}</span>
+        </button>
+        {profileOpen && (
+          <div className="mobile-profile-menu glass" ref={mobileProfileRef} role="menu" aria-label={t('accountSettings')}>
+            <div className="profile-summary">
+              <span className="profile-avatar">{avatar ? <img src={avatar} alt="" /> : <Icon name="user" size={18} />}</span>
+              <span><strong>User</strong><small>{t('accountReady')}</small></span>
+            </div>
+            <p className="profile-description">{t('accountDescription')}</p>
+            <button type="button" className="profile-option" role="menuitem" onClick={() => { setProfileOpen(false); setAvatarError(''); setProfileSettingsOpen(true) }}><Icon name="user" size={15} /><span>{t('profile')}</span></button>
+            <button type="button" className="profile-option" role="menuitem" onClick={() => { setProfileOpen(false); setAppearanceOpen(true) }}><Icon name="settings" size={15} /><span>{t('preferences')}</span></button>
+            <button type="button" className="profile-option" role="menuitem" onClick={() => setProfileOpen(false)}><Icon name="settings" size={15} /><span>{t('playback')}</span></button>
+            <button type="button" className="profile-option" role="menuitem" onClick={() => setProfileOpen(false)}><Icon name="settings" size={15} /><span>{t('privacy')}</span></button>
+            <button type="button" className="profile-option" role="menuitem" onClick={() => setProfileOpen(false)}><Icon name="user" size={15} /><span>{t('help')}</span></button>
+            <button type="button" className="profile-option profile-signout" role="menuitem" onClick={() => setProfileOpen(false)}><Icon name="user" size={15} /><span>{t('signOut')}</span></button>
+          </div>
+        )}
       </nav>
       <Player />
       {appearanceOpen && (
