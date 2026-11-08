@@ -1,4 +1,6 @@
 const paths = {
+  home: <><path d="m4 10 8-6 8 6" /><path d="M6 9v10h12V9M10 19v-5h4v5" /></>,
+  library: <><path d="M5 5h14v14H5z" /><path d="M8 8h8M8 12h8M8 16h5" /></>,
   search: <><circle cx="11" cy="11" r="6.5" /><path d="m16 16 5 5" /></>,
   close: <><path d="m7 7 10 10M17 7 7 17" /></>,
   previous: <><path d="M6 5v14M18 7l-7 5 7 5V7Z" /></>,
