@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { playlists, songs, fmt } from '../data.js'
+import heroHeadlines from '../hero-headlines.json'
 import { usePlayer } from '../PlayerContext.jsx'
 import Cover from '../components/Cover.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
@@ -14,9 +15,18 @@ function getGreeting(t) {
   return t('night')
 }
 
+function getHeadline() {
+  const previous = localStorage.getItem('vawes-hero-headline')
+  const available = heroHeadlines.filter((headline) => headline !== previous)
+  const next = available[Math.floor(Math.random() * available.length)] ?? heroHeadlines[0]
+  localStorage.setItem('vawes-hero-headline', next)
+  return next
+}
+
 function DiscoverHome() {
   const { current, play } = usePlayer()
   const { t, playlistName } = useLanguage()
+  const [headline] = useState(getHeadline)
   const [avatar, setAvatar] = useState(() => localStorage.getItem('vawes-avatar') ?? '')
   useEffect(() => {
     const updateAvatar = (event) => setAvatar(event.detail ?? '')
@@ -34,7 +44,7 @@ function DiscoverHome() {
             <span>{getGreeting(t)}, User</span>
           </p>
           <p className="eyebrow">{t('discovery')}</p>
-          <h1><span className="hero-line">{t('fresh')}</span></h1>
+          <h1><span className="hero-line">{headline}</span></h1>
           <p className="welcome-copy">{t('welcome')}</p>
         </div>
         <div className={`welcome-orb ${avatar ? 'has-avatar' : ''}`} aria-hidden="true">
