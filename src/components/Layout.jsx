@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, Link, Outlet } from 'react-router-dom'
 import Cover from './Cover.jsx'
 import Player from './Player.jsx'
-import { sidebarPlaylists } from '../data.js'
+import { useCatalog } from '../CatalogContext.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
 import Icon from './Icon.jsx'
 
 export default function Layout() {
+  const { catalog, status, error } = useCatalog()
   const { language, setLanguage, t, playlistName } = useLanguage()
   const [languageOpen, setLanguageOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -137,9 +138,10 @@ export default function Layout() {
             <NavLink to="/" end>{t('home')}</NavLink>
             <NavLink to="/kereses">{t('search')}</NavLink>
             <NavLink to="/konyvtar">{t('library')}</NavLink>
+            <NavLink to="/kedvencek">{t('favorites')}</NavLink>
           </nav>
           <p className="label">{t('playlists')}</p>
-          {sidebarPlaylists.map((p) => (
+          {catalog.playlists.slice(0, 4).map((p) => (
             <Link key={p.id} className="pl-item" to={`/lista/${p.id}`}>
               <Cover color={p.color} size="xs" />{playlistName(p.id)}
             </Link>
@@ -225,6 +227,7 @@ export default function Layout() {
           </div>
         </aside>
         <main className="content glass">
+          {status === 'ready' && error && <p className="catalog-offline" role="status">{t('catalogOffline')}</p>}
           <Outlet />
         </main>
       </div>

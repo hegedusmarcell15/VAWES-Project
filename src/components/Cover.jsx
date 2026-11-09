@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { COLORS } from '../data.js'
+import { COLORS } from '../catalogUtils.js'
 
 function Cover({ color, size = 'md', image }) {
   return (

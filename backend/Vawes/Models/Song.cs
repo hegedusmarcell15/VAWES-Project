@@ -9,6 +9,8 @@ public partial class Song
 
     public string Title { get; set; } = null!;
 
+    public string? Slug { get; set; }
+
     public int ArtistId { get; set; }
 
     public int? AlbumId { get; set; }
