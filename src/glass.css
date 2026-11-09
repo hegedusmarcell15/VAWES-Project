@@ -181,6 +181,13 @@ body{margin:0; font-family:Arial, Helvetica, sans-serif; color:#fff; background:
 h2{font-size:1.2rem; margin:0 0 .9rem}
 .meta{color:var(--text-dim); font-size:.85rem; margin:0}
 .muted{color:var(--text-dim); font-size:.8rem; margin:0}
+.catalog-offline{padding:.55rem .8rem; margin:0 0 .8rem; color:var(--text-dim); border:1px solid rgba(255,255,255,.12); border-radius:12px; background:rgba(255,255,255,.06); font-size:.75rem}
+.catalog-skeleton{display:grid; gap:.75rem; padding:.75rem 0}
+.skeleton-line{display:block; border-radius:12px; background:linear-gradient(100deg,rgba(255,255,255,.06) 20%,rgba(255,255,255,.14) 45%,rgba(255,255,255,.06) 70%); background-size:220% 100%; animation:skeleton-shimmer 1.4s ease-in-out infinite}
+.skeleton-heading{width:min(42%,240px); height:1.55rem; margin-bottom:.3rem}
+.skeleton-row{height:3.6rem}
+@keyframes skeleton-shimmer{to{background-position-x:-220%}}
+@media (prefers-reduced-motion:reduce){.skeleton-line{animation:none}}
 
 .playlist-header{display:flex; align-items:flex-end; gap:1.4rem; margin-bottom:1.6rem}
 .page-head{display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:1.2rem}
@@ -411,4 +418,63 @@ mark{background:none; color:var(--pink); font-weight:bold}
 /* ha a böngésző nem tud backdrop-filtert, legyen olvasható sötét panel */
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .glass{background:rgba(20,18,40,.88)}
+}
+.player{width:min(1180px,100%); gap:1rem}
+.track-info{flex-shrink:0}
+.track-info>div{min-width:0}
+.player-message{max-width:220px; overflow:hidden; color:var(--pink); font-size:.66rem!important; text-overflow:ellipsis; white-space:nowrap}
+.controls{gap:.75rem}
+.controls button.is-active{color:var(--cyan)}
+.volume-control{display:flex; align-items:center; gap:.45rem; width:105px; flex-shrink:0}
+.volume-control button{display:grid; place-items:center; padding:.2rem; color:#fff; border:0; background:transparent; cursor:pointer}
+.volume-control button:hover{color:var(--cyan)}
+.volume-control input{width:100%; min-width:0; accent-color:var(--cyan)}
+.controls button:focus-visible,.volume-control button:focus-visible,.volume-control input:focus-visible{outline:2px solid var(--cyan); outline-offset:3px; border-radius:6px}
+@media (max-width:720px){
+  .player{width:auto; gap:.5rem}
+  .controls{gap:.7rem}
+  .volume-control{width:82px}
+}
+.entity-link{display:block; min-width:0; color:inherit; text-decoration:none}
+.entity-link:hover .entity-card{transform:translateY(-3px); border-color:rgba(255,255,255,.28); background:linear-gradient(145deg,color-mix(in srgb,var(--violet) 20%,transparent),color-mix(in srgb,var(--cyan) 10%,transparent))}
+.entity-link:focus-visible,.entity-card:focus-visible{outline:2px solid var(--cyan); outline-offset:3px; border-radius:18px}
+.entity-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(145px,1fr)); gap:.8rem}
+.entity-card{display:flex; flex-direction:column; gap:.4rem; min-width:0; height:100%; padding:.75rem; border-radius:18px; color:#fff; text-decoration:none; transition:transform .2s,border-color .2s,background .2s}
+.entity-card .cover{width:100%; height:auto; aspect-ratio:1; border-radius:13px}
+.entity-card strong,.entity-card small{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.entity-card small{color:var(--text-dim); font-size:.72rem}
+.search-section{margin:0 0 1.65rem}
+.search-section>h2{margin-bottom:.8rem}
+.search-section .section-heading h2{margin:0}
+.search-results{display:grid; gap:.4rem}
+.recent-searches{display:flex; gap:.5rem; flex-wrap:wrap}
+.text-button{padding:0; color:inherit; font:inherit; text-align:left; border:0; background:transparent; cursor:pointer}
+.text-button:hover,.entity-link:hover,.entity-link:hover .entity-card strong{color:var(--cyan)}
+.release .release-play{flex-shrink:0; padding:.2rem; border:0; background:transparent; cursor:pointer}
+.favorite-button,.icon-action{display:grid; place-items:center; min-width:2rem; min-height:2rem; padding:.3rem; color:var(--text-dim); border:0; border-radius:50%; background:transparent; cursor:pointer; transition:color .18s,background .18s,transform .18s}
+.favorite-button:hover,.icon-action:hover{color:#fff; background:rgba(255,255,255,.1); transform:scale(1.08)}
+.favorite-button.is-favorite{color:var(--pink)}
+.favorite-button.is-favorite .icon{fill:currentColor}
+.favorite-button:focus-visible,.icon-action:focus-visible,.text-button:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
+.artist-hero,.album-hero{display:flex; align-items:flex-end; gap:1.3rem; margin:.2rem 0 1.8rem; padding:1.15rem; border:1px solid rgba(255,255,255,.12); border-radius:22px; background:linear-gradient(120deg,color-mix(in srgb,var(--violet) 20%,transparent),color-mix(in srgb,var(--cyan) 8%,transparent))}
+.artist-hero .cover,.album-hero .cover{width:clamp(110px,18vw,180px); height:auto; aspect-ratio:1}
+.artist-hero h1,.album-hero h1{margin:.25rem 0 .45rem}
+.album-actions,.playlist-actions{display:flex; align-items:center; flex-wrap:wrap; gap:.5rem; margin-top:.8rem}
+.album-actions .field{max-width:230px}
+.playlist-heading-copy{min-width:0}
+.rename-form{display:flex; flex-wrap:wrap; gap:.4rem; margin:.5rem 0}
+.rename-form .field{width:min(300px,100%)}
+.inline-notice{margin:.55rem 0 0; color:var(--cyan); font-size:.75rem}
+.track-actions{white-space:nowrap}
+.track-actions .favorite-button,.track-actions .icon-action{display:inline-grid; vertical-align:middle}
+.icon-action:disabled{opacity:.3; cursor:default; transform:none}
+.remove-track:hover{color:var(--pink)}
+.search-results table td:last-child,.search-results table th:last-child{width:2.7rem}
+@media (max-width:720px){
+  .entity-grid{grid-template-columns:repeat(auto-fill,minmax(125px,1fr)); gap:.6rem}
+  .artist-hero,.album-hero{align-items:center; gap:.8rem; padding:.8rem; border-radius:18px}
+  .artist-hero .cover,.album-hero .cover{width:88px}
+  .artist-hero h1,.album-hero h1{font-size:1.35rem}
+  .album-actions .field{max-width:100%; flex:1 1 100%}
+  .track-actions .favorite-button,.track-actions .icon-action{min-width:1.65rem; min-height:1.65rem}
 }

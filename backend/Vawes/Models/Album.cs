@@ -9,6 +9,8 @@ public partial class Album
 
     public string Title { get; set; } = null!;
 
+    public string? Slug { get; set; }
+
     public int ArtistId { get; set; }
 
     public string? CoverUrl { get; set; }

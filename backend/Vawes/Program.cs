@@ -4,14 +4,20 @@ using Scalar.AspNetCore;
 
 namespace Vawes
 {
-    public class Program
+    public partial class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            var connectionString = builder.Configuration.GetConnectionString("Mysql")
+                ?? throw new InvalidOperationException(
+                    "Connection string 'Mysql' is not configured. Set ConnectionStrings__Mysql before starting the API.");
+
             builder.Services.AddDbContext<VaweContext>(options =>
-                options.UseMySQL(builder.Configuration.GetConnectionString("Mysql")));
+                options.UseMySQL(connectionString));
+            builder.Services.AddSingleton<Vawes.Services.MusicStorage>();
+            builder.Services.AddScoped<Vawes.Security.AdminApiKeyFilter>();
 
             // Add services to the container.
 
@@ -19,7 +25,19 @@ namespace Vawes
             {
                 options.AddPolicy("Frontend", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+                    var configuredOrigins = builder.Configuration["FrontendOrigins"]?
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        ?? [];
+                    policy.WithOrigins(new[]
+                        {
+                            "http://localhost:5173",
+                            "http://127.0.0.1:5173",
+                            "https://hegedusmarcell15.github.io",
+                            "https://vawes.app",
+                        }
+                            .Concat(configuredOrigins)
+                            .Distinct(StringComparer.OrdinalIgnoreCase)
+                            .ToArray())
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });
@@ -30,6 +48,13 @@ namespace Vawes
             builder.Services.AddOpenApi();
 
             var app = builder.Build();
+
+            if (args.Contains("--seed-catalog", StringComparer.Ordinal))
+            {
+                await using var scope = app.Services.CreateAsyncScope();
+                await Vawes.Services.CatalogSeeder.SeedAsync(scope.ServiceProvider);
+                return;
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

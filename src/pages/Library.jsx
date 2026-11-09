@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { playlists, norm } from '../data.js'
+import { norm } from '../catalogUtils.js'
+import { useCatalog } from '../CatalogContext.jsx'
+import CatalogSkeleton from '../components/CatalogSkeleton.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
 
 function SortPicker({ value, onChange, options, label }) {
@@ -53,17 +55,20 @@ function SortPicker({ value, onChange, options, label }) {
 }
 
 export default function Library() {
+  const { catalog, status } = useCatalog()
   const { t, playlistName } = useLanguage()
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('recent')
   const [q, setQ] = useState('')
 
-  const list = useMemo(() => playlists
+  const list = useMemo(() => catalog.playlists
     .filter((p) => (filter === 'all' || p.type === filter) && norm(p.name).includes(norm(q.trim())))
     .sort((a, b) =>
       sort === 'name' ? a.name.localeCompare(b.name, 'hu')
       : sort === 'length' ? b.minutes - a.minutes
-      : a.recent - b.recent), [filter, q, sort])
+      : a.recent - b.recent), [catalog.playlists, filter, q, sort])
+
+  if (status === 'loading') return <CatalogSkeleton rows={6} />
 
   return (
     <>
