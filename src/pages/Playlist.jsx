@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { fmt } from '../catalogUtils.js'
 import { useCatalog } from '../CatalogContext.jsx'
 import { usePlayerActions, usePlayerState } from '../PlayerContext.jsx'
@@ -9,6 +9,7 @@ import FavoriteButton from '../components/FavoriteButton.jsx'
 import { AlbumLink, ArtistLink } from '../components/TrackLinks.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
 import Icon from '../components/Icon.jsx'
+import { useAuth } from '../AuthContext.jsx'
 
 function shuffleSongs(songs) {
   const shuffled = [...songs]
@@ -21,10 +22,12 @@ function shuffleSongs(songs) {
 
 export default function Playlist() {
   const { id } = useParams()
-  const { catalog, status, updatePlaylist } = useCatalog()
+  const { catalog, status, updatePlaylist, deletePlaylist, playlistError } = useCatalog()
+  const { user } = useAuth()
   const { current } = usePlayerState()
   const { play, playQueue } = usePlayerActions()
   const { t, playlistName } = useLanguage()
+  const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
   const [draftName, setDraftName] = useState('')
   const [notice, setNotice] = useState('')
@@ -41,27 +44,50 @@ export default function Playlist() {
     setEditing(true)
     setNotice('')
   }
-  const saveName = (event) => {
+  const saveName = async (event) => {
     event.preventDefault()
     const name = draftName.trim()
     if (!name) {
       setNotice(t('playlistNameRequired'))
       return
     }
-    updatePlaylist(playlist.id, { name })
-    setEditing(false)
-    setNotice(t('playlistUpdated'))
+    try {
+      await updatePlaylist(playlist.id, { name })
+      setEditing(false)
+      setNotice(t('playlistUpdated'))
+    } catch (error) {
+      setNotice(error.message)
+    }
   }
-  const updateSongs = (nextSongs) => {
-    updatePlaylist(playlist.id, { song_ids: nextSongs.map((song) => song.id) })
-    setNotice(t('playlistUpdated'))
+  const updateSongs = async (nextSongs) => {
+    try {
+      await updatePlaylist(playlist.id, { song_ids: nextSongs.map((song) => song.id) })
+      setNotice(t('playlistUpdated'))
+    } catch (error) {
+      setNotice(error.message)
+    }
   }
   const moveSong = (index, direction) => {
     const target = index + direction
     if (target < 0 || target >= songs.length) return
     const next = [...songs]
     ;[next[index], next[target]] = [next[target], next[index]]
-    updateSongs(next)
+    void updateSongs(next)
+  }
+  const isPersonal = Boolean(user && playlist.type === 'mine')
+  const addSong = (songId) => {
+    const song = catalog.songs.find((item) => String(item.id) === String(songId))
+    if (song && !songs.some((item) => String(item.id) === String(song.id)))
+      void updateSongs([...songs, song])
+  }
+  const handleDeletePlaylist = async () => {
+    if (!window.confirm(t('playlistDeleteConfirm', playlist.name))) return
+    try {
+      await deletePlaylist(playlist.id)
+      navigate('/konyvtar', { replace: true })
+    } catch (error) {
+      setNotice(error.message)
+    }
   }
 
   return (
@@ -82,8 +108,20 @@ export default function Playlist() {
             <button className="chip on" type="button" disabled={!songs.length} onClick={() => playQueue(songs)}>{t('playAll')}</button>
             <button className="chip" type="button" disabled={!songs.length} onClick={() => playQueue(shuffleSongs(songs))}><Icon name="shuffle" size={15} />{t('shuffle')}</button>
             <button className="chip" type="button" onClick={startEditing}><Icon name="edit" size={15} />{t('playlistEdit')}</button>
+            {isPersonal && <button className="chip" type="button" onClick={handleDeletePlaylist}>{t('deletePlaylist')}</button>}
           </div>
-          {notice && <p className="inline-notice" role="status">{notice}</p>}
+          {(notice || playlistError) && <p className="inline-notice" role="status">{notice || playlistError}</p>}
+          {editing && isPersonal && (
+            <label className="playlist-add-track">
+              <span>{t('addToPlaylist')}</span>
+              <select value="" onChange={(event) => addSong(event.target.value)}>
+                <option value="" disabled>{t('chooseTrack')}</option>
+                {catalog.songs.filter((song) => !songs.some((item) => String(item.id) === String(song.id))).map((song) => (
+                  <option key={song.id} value={song.id}>{song.title} · {song.artist}</option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
       </section>
       {songs.length === 0 ? <p className="empty">{t('catalogEmpty')}</p> : (

@@ -1,4 +1,9 @@
 using Vawes.Models;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -16,8 +21,60 @@ namespace Vawes
 
             builder.Services.AddDbContext<VaweContext>(options =>
                 options.UseMySQL(connectionString));
+            builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
             builder.Services.AddSingleton<Vawes.Services.MusicStorage>();
+            builder.Services.AddMemoryCache();
+            builder.Services.AddHttpClient<Vawes.Services.DeezerArtworkLookup>(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(3);
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("VAWES/1.0");
+            });
             builder.Services.AddScoped<Vawes.Security.AdminApiKeyFilter>();
+
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.Cookie.Name = "__Host-vawes-session";
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                    options.Cookie.SameSite = SameSiteMode.None;
+                    options.Cookie.Path = "/";
+                    options.SlidingExpiration = true;
+                    options.ExpireTimeSpan = TimeSpan.FromHours(12);
+                    options.Events.OnRedirectToLogin = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        return Task.CompletedTask;
+                    };
+                    options.Events.OnRedirectToAccessDenied = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        return Task.CompletedTask;
+                    };
+                });
+            builder.Services.AddAuthorization();
+            var dataProtectionPath = builder.Configuration["DataProtection:KeysPath"];
+            if (!string.IsNullOrWhiteSpace(dataProtectionPath))
+            {
+                Directory.CreateDirectory(dataProtectionPath);
+                builder.Services.AddDataProtection()
+                    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionPath))
+                    .SetApplicationName("VAWES");
+            }
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                options.AddPolicy("auth", context =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 10,
+                            Window = TimeSpan.FromMinutes(1),
+                            QueueLimit = 0,
+                            AutoReplenishment = true,
+                        }));
+            });
 
             // Add services to the container.
 
@@ -39,7 +96,8 @@ namespace Vawes
                             .Distinct(StringComparer.OrdinalIgnoreCase)
                             .ToArray())
                         .AllowAnyHeader()
-                        .AllowAnyMethod();
+                        .AllowAnyMethod()
+                        .AllowCredentials();
                 });
             });
 
@@ -66,6 +124,8 @@ namespace Vawes
             app.UseHttpsRedirection();
 
             app.UseCors("Frontend");
+            app.UseRateLimiter();
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();

@@ -465,6 +465,13 @@ mark{background:none; color:var(--pink); font-weight:bold}
 .rename-form{display:flex; flex-wrap:wrap; gap:.4rem; margin:.5rem 0}
 .rename-form .field{width:min(300px,100%)}
 .inline-notice{margin:.55rem 0 0; color:var(--cyan); font-size:.75rem}
+.library-heading-actions{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.playlist-create-form{display:flex;align-items:flex-end;gap:.6rem;flex-wrap:wrap;margin:0 0 1.2rem;padding:1rem;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:rgba(255,255,255,.045)}
+.playlist-create-field{display:grid;gap:.4rem;flex:1;min-width:min(100%,220px);color:var(--text-dim);font-size:.76rem}
+.playlist-create-field input{width:100%}
+.playlist-add-track{display:grid;gap:.4rem;width:min(100%,420px);margin-top:.8rem;color:var(--text-dim);font-size:.76rem}
+.playlist-add-track select{padding:.55rem .65rem;color:#fff;border:1px solid var(--glass-border);border-radius:10px;background:rgba(9,8,25,.75);font:inherit}
+.playlist-add-track option{color:#fff;background:#151326}
 .track-actions{white-space:nowrap}
 .track-actions .favorite-button,.track-actions .icon-action{display:inline-grid; vertical-align:middle}
 .icon-action:disabled{opacity:.3; cursor:default; transform:none}

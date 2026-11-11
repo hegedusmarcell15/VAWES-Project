@@ -28,6 +28,11 @@ A liquid glass "receptje" a `src/glass.css` tetején lévő változókban hangol
        Get-Content backend\catalog-schema.sql | mysql -u root -p vawe
 
    Ez a lépés nem töröl meglévő adatot.
+   A saját lejátszási listák számsorrendjének megőrzéséhez egyszer futtasd le ezt a külön, csak egy alapértelmezett értékű oszlopot hozzáadó frissítést is:
+
+       Get-Content backend\playlist-order-schema.sql | mysql -u root -p vawe
+
+   Ez minden meglévő kapcsolatot megtart, és a régi tételek pozícióját `0`-ra állítja.
 6. Állítsd be a kapcsolatot környezeti változóval; ne commitolj jelszót. Fejlesztéshez a .NET user-secrets is használható:
 
        ConnectionStrings__Mysql="server=localhost;database=vawe;user=...;password=..."
@@ -58,9 +63,19 @@ Ha az API nincs beállítva vagy nem érhető el, a frontend a `public/catalog.s
 
 Fejlesztés közben a backend CORS-ja engedélyezi a Vite alapértelmezett `localhost:5173` és `127.0.0.1:5173` címeit.
 
+## Fiókok és hitelesítés
+
+A frontend `/register` és `/login` útvonalán lehet fiókot létrehozni és bejelentkezni. A regisztráció legalább 10 karakteres, kis- és nagybetűt, valamint számot tartalmazó jelszót kér; az API ASP.NET Core `PasswordHasher<User>` segítségével csak a hash-t tárolja. A regisztráció nem fogad el szerepkört, így nem lehet adminisztrátori fiókot létrehozni a kliensből.
+
+Az API `/api/auth/register`, `/api/auth/login`, `/api/auth/me` és `/api/auth/logout` végpontokat biztosít. A bejelentkezés HttpOnly, Secure cookie-t ad vissza; a `credentials: include` használata és a CORS-origin engedélyezése szükséges. A `Remember me` opció 30 napos, egyébként 12 órás hitelesítést ad. A hitelesítési végpontok IP-címenként 10 kérést engednek percenként. A jelszó-visszaállítás nincs bekapcsolva, mert nincs hozzá konfigurált, biztonságos e-mailes folyamat.
+
+A kedvencek és saját lejátszási listák az aktuális bejelentkezett fiókhoz tartoznak; a backend tulajdonos alapján korlátozza az olvasást és módosítást. A fiókokhoz a meglévő táblák használhatók; a listaelemek sorrendjének megőrzéséhez egyszer alkalmazni kell a `playlist-order-schema.sql` additív frissítést. A Docker Compose egy külön `vawe-api-keys` kötetben őrzi a cookie-k titkosítási kulcsait, ezért az API újratelepítése után is érvényesek maradnak a munkamenetek. A kötetet ne töröld, ha a bejelentkezéseket is meg akarod őrizni.
+
 ## MP3-feltöltés és streamelés
 
-Az admin feltöltőoldal fejlesztés közben a `http://localhost:5173/upload.html` címen érhető el. Az API `POST /api/songs` végpontja MP3-at fogad, TagLibSharp segítségével kiolvassa a címkéket és az időtartamot, majd új katalógusbejegyzést hoz létre. A fájlok alapértelmezett helye `backend/storage/songs/uploads`; a `MusicStorage__Directory` változóval másik, tartósan csatolt könyvtár adható meg. A legnagyobb fájlméret 50 MB. A `GET /api/songs/{id}/stream` végpont támogatja a HTTP Range kéréseket, ezért a lejátszó tekerése is működik. A `PUT /api/songs/{id}` a cím, előadó, album és műfaj szerkesztésére, a `DELETE /api/songs/{id}` a katalógusbejegyzés és a feltöltött fájl eltávolítására szolgál.
+Az admin feltöltőoldal fejlesztés közben a `http://localhost:5173/upload.html` címen érhető el. Több MP3 egyszerre kiválasztható vagy a feltöltési sorba húzható; a böngésző előnézeti ID3-címkéket olvas, a szerver pedig TagLibSharp segítségével ismét ellenőrzi a címkéket és az időtartamot. Legfeljebb három fájl töltődik fel párhuzamosan, fájlonkénti és összesített előrehaladással; a hibás elemek külön újrapróbálhatók. A backend fájlonként 50 MB-os méretkorlátot és MP3-ellenőrzést alkalmaz. Ha egy albumhoz még nincs borító, a backend megpróbálja a Deezer API-ból keresni; a találat csak pontosított album- és előadóegyezéskor mentődik, a már létező borítót nem írja felül, a külső keresés hibája pedig nem akadályozza meg a feltöltést.
+
+Az API `POST /api/songs` végpontja MP3-at fogad, majd új katalógusbejegyzést hoz létre. A fájlok alapértelmezett helye `backend/storage/songs/uploads`; a `MusicStorage__Directory` változóval másik, tartósan csatolt könyvtár adható meg. A `GET /api/songs/{id}/stream` végpont támogatja a HTTP Range kéréseket, ezért a lejátszó tekerése is működik. A `PUT /api/songs/{id}` a cím, előadó, album és műfaj szerkesztésére, a `DELETE /api/songs/{id}` a katalógusbejegyzés és a feltöltött fájl eltávolítására szolgál.
 
 A feltöltéshez, szerkesztéshez és törléshez az API-n be kell állítani az `Upload__ApiKey` szerveroldali környezeti változót. A kulcsot az adminoldal jelszómezőjébe kell beírni; a böngésző nem menti el, és nem kerül a frontend buildbe. Példa PowerShellben:
 
@@ -80,7 +95,7 @@ Teszt vagy build előtt állítsd le a futó API-t a termináljában `Ctrl+C`-ve
 
 ## Docker Compose
 
-A Compose konfiguráció egy külön MySQL-adatbázist és egy API-t indít; az adatbázis és az MP3-ak külön, névvel ellátott kötetekben maradnak meg újraindításkor. Először hozz létre saját, git által figyelmen kívül hagyott konfigurációt, és cseréld le a minta jelszavakat:
+A Compose konfiguráció egy külön MySQL-adatbázist és egy API-t indít; az adatbázis, az MP3-ak és a hitelesítési kulcsok külön, névvel ellátott kötetekben maradnak meg újraindításkor. Először hozz létre saját, git által figyelmen kívül hagyott konfigurációt, és cseréld le a minta jelszavakat:
 
     Copy-Item backend\.env.example backend\.env
     # Szerkeszd a backend\.env fájlt, és használj külön, erős jelszavakat.
@@ -90,6 +105,7 @@ Az API a `http://localhost:5121` címen érhető el. A Compose szándékosan nem
 
     Get-Content backend\vawes.sql -Raw | docker compose --env-file backend\.env -f backend\docker-compose.yml exec -T mysql sh -c 'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"'
     Get-Content backend\catalog-schema.sql -Raw | docker compose --env-file backend\.env -f backend\docker-compose.yml exec -T mysql sh -c 'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"'
+    Get-Content backend\playlist-order-schema.sql -Raw | docker compose --env-file backend\.env -f backend\docker-compose.yml exec -T mysql sh -c 'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"'
 
 Ez a kezdeti import csak a Compose saját, új adatbázis-kötetére vonatkozik. Ne futtasd meglévő adatbázison; a helyi WAMP-adatbázis és az új Compose-adatbázis egymástól független. A `docker compose down` leállítja a szolgáltatásokat, de megőrzi a köteteket. Ne használd a `down -v` kapcsolót, ha meg akarod tartani az adatbázist vagy a feltöltött zenéket.
 Az importszkriptek `vawe` adatbázist használnak, ezért ezekkel a parancsokkal hagyd a `MYSQL_DATABASE=vawe` értéket.
