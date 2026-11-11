@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { playlists, norm } from '../data.js'
+import { norm } from '../catalogUtils.js'
+import { useCatalog } from '../CatalogContext.jsx'
+import CatalogSkeleton from '../components/CatalogSkeleton.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
+import { useAuth } from '../AuthContext.jsx'
 
 function SortPicker({ value, onChange, options, label }) {
   const [open, setOpen] = useState(false)
@@ -53,24 +56,63 @@ function SortPicker({ value, onChange, options, label }) {
 }
 
 export default function Library() {
+  const { catalog, status, createPlaylist, playlistError } = useCatalog()
+  const { user } = useAuth()
   const { t, playlistName } = useLanguage()
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('recent')
   const [q, setQ] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [actionMessage, setActionMessage] = useState('')
 
-  const list = useMemo(() => playlists
+  const handleCreatePlaylist = async (event) => {
+    event.preventDefault()
+    const name = newName.trim()
+    if (!name) return
+    try {
+      await createPlaylist(name)
+      setNewName('')
+      setCreating(false)
+      setFilter('mine')
+      setActionMessage(t('playlistCreated'))
+    } catch (error) {
+      setActionMessage(error.message)
+    }
+  }
+
+  const list = useMemo(() => catalog.playlists
     .filter((p) => (filter === 'all' || p.type === filter) && norm(p.name).includes(norm(q.trim())))
     .sort((a, b) =>
       sort === 'name' ? a.name.localeCompare(b.name, 'hu')
       : sort === 'length' ? b.minutes - a.minutes
-      : a.recent - b.recent), [filter, q, sort])
+      : a.recent - b.recent), [catalog.playlists, filter, q, sort])
+
+  if (status === 'loading') return <CatalogSkeleton rows={6} />
 
   return (
     <>
       <div className="page-head">
         <h1>{t('library')}</h1>
-        <p className="meta">{t('libraryCount', list.length)}</p>
+        <div className="library-heading-actions">
+          <p className="meta">{t('libraryCount', list.length)}</p>
+          {user ? (
+            <button type="button" className="chip on" onClick={() => setCreating((value) => !value)}>{t('createPlaylist')}</button>
+          ) : <Link className="chip" to="/login">{t('authLogin')}</Link>}
+        </div>
       </div>
+
+      {creating && (
+        <form className="playlist-create-form" onSubmit={handleCreatePlaylist}>
+          <label className="playlist-create-field">
+            <span>{t('newPlaylist')}</span>
+            <input className="field" value={newName} maxLength={150} onChange={(event) => setNewName(event.target.value)} required autoFocus />
+          </label>
+          <button className="chip on" type="submit">{t('save')}</button>
+          <button className="chip" type="button" onClick={() => setCreating(false)}>{t('cancel')}</button>
+        </form>
+      )}
+      {(actionMessage || playlistError) && <p className="inline-notice" role="status">{actionMessage || playlistError}</p>}
 
       <div className="tools">
         {[[ 'all', t('all') ], ['mine', t('mine')], ['vawes', t('vawesMix')]].map(([key, label]) => (

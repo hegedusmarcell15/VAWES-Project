@@ -2,17 +2,21 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, Link, Outlet } from 'react-router-dom'
 import Cover from './Cover.jsx'
 import Player from './Player.jsx'
-import { sidebarPlaylists } from '../data.js'
+import { useCatalog } from '../CatalogContext.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
 import Icon from './Icon.jsx'
+import { useAuth } from '../AuthContext.jsx'
 
 export default function Layout() {
+  const { catalog, status, error } = useCatalog()
+  const { user, logout } = useAuth()
   const { language, setLanguage, t, playlistName } = useLanguage()
   const [languageOpen, setLanguageOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false)
   const [avatar, setAvatar] = useState(() => localStorage.getItem('vawes-avatar') ?? '')
   const [avatarError, setAvatarError] = useState('')
+  const [profileError, setProfileError] = useState('')
   const [appearanceOpen, setAppearanceOpen] = useState(false)
   const [theme, setTheme] = useState(() => localStorage.getItem('vawes-theme') ?? 'aurora')
   const [playStyle, setPlayStyle] = useState(() => localStorage.getItem('vawes-play-style') ?? 'prism')
@@ -84,6 +88,15 @@ export default function Layout() {
     window.dispatchEvent(new CustomEvent('vawes-avatar-change', { detail: '' }))
     setAvatarError('')
   }
+  const handleSignOut = async () => {
+    setProfileError('')
+    try {
+      await logout()
+      setProfileOpen(false)
+    } catch (signOutError) {
+      setProfileError(signOutError.message)
+    }
+  }
 
   useEffect(() => {
     const selected = theme === 'custom' ? customTheme : themes[theme] ?? themes.aurora
@@ -137,9 +150,10 @@ export default function Layout() {
             <NavLink to="/" end>{t('home')}</NavLink>
             <NavLink to="/kereses">{t('search')}</NavLink>
             <NavLink to="/konyvtar">{t('library')}</NavLink>
+            <NavLink to="/kedvencek">{t('favorites')}</NavLink>
           </nav>
           <p className="label">{t('playlists')}</p>
-          {sidebarPlaylists.map((p) => (
+          {catalog.playlists.slice(0, 4).map((p) => (
             <Link key={p.id} className="pl-item" to={`/lista/${p.id}`}>
               <Cover color={p.color} size="xs" />{playlistName(p.id)}
             </Link>
@@ -184,30 +198,36 @@ export default function Layout() {
               <div className="profile-menu" role="menu" aria-label={t('accountSettings')}>
                 <div className="profile-summary">
                   <span className="profile-avatar">{avatar ? <img src={avatar} alt="" /> : <Icon name="user" size={18} />}</span>
-                  <span><strong>User</strong><small>{t('accountReady')}</small></span>
+                  <span><strong>{user?.username ?? t('account')}</strong><small>{user ? t('account') : t('authWelcome')}</small></span>
                 </div>
-                <p className="profile-description">{t('accountDescription')}</p>
-                {[
-                  ['user', 'profile'],
-                  ['settings', 'preferences'],
-                  ['settings', 'playback'],
-                  ['settings', 'privacy'],
-                  ['user', 'help'],
-                ].map(([icon, label]) => (
-                  <button key={label} type="button" className="profile-option" role="menuitem" onClick={() => {
-                    setProfileOpen(false)
-                    if (label === 'preferences') setAppearanceOpen(true)
-                    if (label === 'profile') {
-                      setAvatarError('')
-                      setProfileSettingsOpen(true)
-                    }
-                  }}>
-                    <Icon name={icon} size={15} /><span>{t(label)}</span>
-                  </button>
-                ))}
-                <button type="button" className="profile-option profile-signout" role="menuitem" onClick={() => setProfileOpen(false)}>
-                  <Icon name="user" size={15} /><span>{t('signOut')}</span>
-                </button>
+                {user ? (
+                  <>
+                    {[
+                      ['user', 'profile'],
+                      ['settings', 'preferences'],
+                    ].map(([icon, label]) => (
+                      <button key={label} type="button" className="profile-option" role="menuitem" onClick={() => {
+                        setProfileOpen(false)
+                        if (label === 'preferences') setAppearanceOpen(true)
+                        if (label === 'profile') {
+                          setAvatarError('')
+                          setProfileSettingsOpen(true)
+                        }
+                      }}>
+                        <Icon name={icon} size={15} /><span>{t(label)}</span>
+                      </button>
+                    ))}
+                    <button type="button" className="profile-option profile-signout" role="menuitem" onClick={handleSignOut}>
+                      <Icon name="user" size={15} /><span>{t('signOut')}</span>
+                    </button>
+                  </>
+                ) : (
+                  <div className="profile-auth-actions">
+                    <Link to="/login" className="profile-option" role="menuitem" onClick={() => setProfileOpen(false)}>{t('authLogin')}</Link>
+                    <Link to="/register" className="profile-option" role="menuitem" onClick={() => setProfileOpen(false)}>{t('authRegister')}</Link>
+                  </div>
+                )}
+                {profileError && <p className="avatar-error" role="alert">{profileError}</p>}
               </div>
             )}
             <button
@@ -219,12 +239,13 @@ export default function Layout() {
               onClick={() => setProfileOpen((open) => !open)}
             >
               <span className="profile-avatar">{avatar ? <img src={avatar} alt="" /> : <Icon name="user" size={17} />}</span>
-              <span className="profile-trigger-copy"><strong>User</strong><small>{t('account')}</small></span>
+              <span className="profile-trigger-copy"><strong>{user?.username ?? t('account')}</strong><small>{user ? t('account') : t('authLogin')}</small></span>
               <Icon name="chevron" size={14} />
             </button>
           </div>
         </aside>
         <main className="content glass">
+          {status === 'ready' && error && <p className="catalog-offline" role="status">{t('catalogOffline')}</p>}
           <Outlet />
         </main>
       </div>
@@ -306,7 +327,7 @@ export default function Layout() {
             </div>
             <div className="profile-editor">
               <span className="profile-avatar profile-avatar-large">{avatar ? <img src={avatar} alt="" /> : <Icon name="user" size={30} />}</span>
-              <div><strong>User</strong><small>{t('profilePhotoDescription')}</small></div>
+              <div><strong>{user?.username}</strong><small>{t('profilePhotoDescription')}</small></div>
             </div>
             <label className="upload-button">
               <Icon name="user" size={15} />{t('choosePhoto')}
