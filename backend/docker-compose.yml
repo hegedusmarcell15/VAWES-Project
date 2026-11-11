@@ -26,18 +26,21 @@ services:
       mysql:
         condition: service_healthy
     environment:
+      FrontendOrigins: ${FRONTEND_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,https://hegedusmarcell15.github.io,https://vawes.app}
+      Admin__AllowedEmails: ${ADMIN_ALLOWED_EMAILS:?Set ADMIN_ALLOWED_EMAILS in backend/.env}
+      DataProtection__CertificatePath: /run/secrets/vawes/dataprotection.pfx
+      DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?Set DATAPROTECTION_CERTIFICATE_PASSWORD in backend/.env}
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__Mysql: "server=mysql;port=3306;database=${MYSQL_DATABASE:-vawe};user=${MYSQL_USER};password=${MYSQL_PASSWORD}"
       Upload__ApiKey: ${UPLOAD_API_KEY:?Set UPLOAD_API_KEY in backend/.env}
       MusicStorage__Directory: /var/lib/vawes/songs
       DataProtection__KeysPath: /var/lib/vawes/keys
-      FrontendOrigins: ${FRONTEND_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,https://hegedusmarcell15.github.io,https://vawes.app}
     ports:
-      - "5121:8080"
+      - "127.0.0.1:5121:8080"
     volumes:
       - vawe-music-data:/var/lib/vawes/songs
       - vawe-api-keys:/var/lib/vawes/keys
-
+      - ./secrets:/run/secrets/vawes:ro
 volumes:
   vawe-db-data:
   vawe-music-data:
