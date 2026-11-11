@@ -32,6 +32,7 @@ internal sealed class VawesApplicationFactory : WebApplicationFactory<Vawes.Prog
             {
                 ["Upload:ApiKey"] = AdminKey,
                 ["MusicStorage:Directory"] = storageDirectory,
+                ["Admin:AllowedEmails"] = "fxadamg@vawes.app,fxmarcellg@vawes.app,ricsikicsikonyhaja@vawes.app",
             });
         });
 

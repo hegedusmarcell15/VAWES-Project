@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using System.Security.Cryptography.X509Certificates;
@@ -22,6 +23,8 @@ namespace Vawes
             builder.Services.AddDbContext<VaweContext>(options =>
                 options.UseMySQL(connectionString));
             builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+            builder.Services.AddSingleton<Vawes.Security.AdminEmailAllowlist>();
+            builder.Services.AddScoped<IAuthorizationHandler, Vawes.Security.AdminAccessAuthorizationHandler>();
             builder.Services.AddSingleton<Vawes.Services.MusicStorage>();
             builder.Services.AddMemoryCache();
             builder.Services.AddHttpClient<Vawes.Services.DeezerArtworkLookup>(client =>
@@ -52,7 +55,14 @@ namespace Vawes
                         return Task.CompletedTask;
                     };
                 });
-            builder.Services.AddAuthorization();
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy(Vawes.Security.AdminEmailAllowlist.PolicyName, policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.AddRequirements(new Vawes.Security.AdminAccessRequirement());
+                });
+            });
             var dataProtectionPath = builder.Configuration["DataProtection:KeysPath"];
 var certificatePath = builder.Configuration["DataProtection:CertificatePath"];
 var certificatePassword = builder.Configuration["DataProtection:CertificatePassword"];
@@ -99,19 +109,7 @@ if (!string.IsNullOrWhiteSpace(dataProtectionPath))
             {
                 options.AddPolicy("Frontend", policy =>
                 {
-                    var configuredOrigins = builder.Configuration["FrontendOrigins"]?
-                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                        ?? [];
-                    policy.WithOrigins(new[]
-                        {
-                            "http://localhost:5173",
-                            "http://127.0.0.1:5173",
-                            "https://hegedusmarcell15.github.io",
-                            "https://vawes.app",
-                        }
-                            .Concat(configuredOrigins)
-                            .Distinct(StringComparer.OrdinalIgnoreCase)
-                            .ToArray())
+                    policy.WithOrigins(Vawes.Security.FrontendOriginValidator.GetAllowedOrigins(builder.Configuration))
                         .AllowAnyHeader()
                         .AllowAnyMethod()
                         .AllowCredentials();

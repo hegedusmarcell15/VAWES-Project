@@ -195,6 +195,11 @@ export default function AuthPage() {
           {isRegister ? t('authHaveAccount') : t('authNeedAccount')}{' '}
           <Link to={isRegister ? '/login' : '/register'}>{isRegister ? t('authLogin') : t('authRegister')}</Link>
         </p>
+        {!isRegister && (
+          <p className="auth-switch">
+            <Link to="/admin/login">{t('adminPortalLink')}</Link>
+          </p>
+        )}
       </section>
     </main>
   )

@@ -95,5 +95,10 @@
 .auth-switch{margin:1.25rem 0 0;color:var(--text-dim);font-size:.8rem;text-align:center}
 .auth-switch a{font-weight:700;text-decoration:none}
 .auth-switch a:hover{text-decoration:underline}
+.admin-logout{padding:0;border:0;background:transparent;cursor:pointer;font:inherit}
+.admin-logout:disabled{opacity:.6;cursor:wait}
+.admin-account{display:grid;gap:.45rem;margin-top:1.5rem;padding:1rem;border:1px solid var(--glass-border);border-radius:12px;background:rgba(9,8,25,.35)}
+.admin-account-label{color:var(--text-dim);font-size:.76rem}
+.admin-account strong{overflow-wrap:anywhere;color:#fff;font-size:.92rem}
 @media(max-width:520px){.auth-page{padding:5.5rem 1rem 2rem}.auth-header{top:1.1rem}}
 @media(prefers-reduced-motion:reduce){.auth-page *{scroll-behavior:auto;transition:none}}
