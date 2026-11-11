@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
 using Vawes.Models;
 using Vawes.Models.DTOs;
+using Vawes.Security;
 
 namespace Vawes.Controllers
 {
@@ -85,7 +86,7 @@ namespace Vawes.Controllers
         }
 
         [HttpGet("AllUser")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = AdminEmailAllowlist.PolicyName)]
         public async Task<IActionResult> AllUser()
         {
             var users = await _context.Users
@@ -95,7 +96,7 @@ namespace Vawes.Controllers
         }
 
         [HttpGet("ById")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = AdminEmailAllowlist.PolicyName)]
         public async Task<IActionResult> UserById([FromQuery] int id)
         {
             var user = await _context.Users
