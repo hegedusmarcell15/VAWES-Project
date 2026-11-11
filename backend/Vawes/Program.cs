@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
-
+using System.Security.Cryptography.X509Certificates;
 namespace Vawes
 {
     public partial class Program
@@ -54,13 +54,30 @@ namespace Vawes
                 });
             builder.Services.AddAuthorization();
             var dataProtectionPath = builder.Configuration["DataProtection:KeysPath"];
-            if (!string.IsNullOrWhiteSpace(dataProtectionPath))
-            {
-                Directory.CreateDirectory(dataProtectionPath);
-                builder.Services.AddDataProtection()
-                    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionPath))
-                    .SetApplicationName("VAWES");
-            }
+var certificatePath = builder.Configuration["DataProtection:CertificatePath"];
+var certificatePassword = builder.Configuration["DataProtection:CertificatePassword"];
+
+if (!string.IsNullOrWhiteSpace(dataProtectionPath))
+{
+    Directory.CreateDirectory(dataProtectionPath);
+
+    if (string.IsNullOrWhiteSpace(certificatePath) ||
+        string.IsNullOrWhiteSpace(certificatePassword))
+    {
+        throw new InvalidOperationException("Data Protection certificate configuration is missing.");
+    }
+
+    var certificate = new X509Certificate2(
+        certificatePath,
+        certificatePassword,
+        X509KeyStorageFlags.EphemeralKeySet
+    );
+
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionPath))
+        .ProtectKeysWithCertificate(certificate)
+        .SetApplicationName("VAWES");
+}
             builder.Services.AddRateLimiter(options =>
             {
                 options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -105,22 +122,27 @@ namespace Vawes
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
-            var app = builder.Build();
+           var app = builder.Build();
 
-            if (args.Contains("--seed-catalog", StringComparer.Ordinal))
-            {
-                await using var scope = app.Services.CreateAsyncScope();
-                await Vawes.Services.CatalogSeeder.SeedAsync(scope.ServiceProvider);
-                return;
-            }
+	if (args.Contains("--create-encrypted-key", StringComparer.Ordinal))
+	{
+    	var keyManager = app.Services.GetRequiredService<
+        Microsoft.AspNetCore.DataProtection.KeyManagement.IKeyManager>();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.MapOpenApi();
-                app.MapScalarApiReference();
-            }
+    	var now = DateTimeOffset.UtcNow;
 
+    	keyManager.CreateNewKey(now, now.AddDays(90));
+
+    	Console.WriteLine("Encrypted Data Protection key created successfully.");
+    	return;
+	}
+
+if (args.Contains("--seed-catalog", StringComparer.Ordinal))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    await Vawes.Services.CatalogSeeder.SeedAsync(scope.ServiceProvider);
+    return;
+}
             app.UseHttpsRedirection();
 
             app.UseCors("Frontend");
