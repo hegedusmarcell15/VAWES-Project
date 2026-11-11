@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -74,6 +75,7 @@ public sealed class SongsController(
     }
 
     [HttpPost]
+    [Authorize(Policy = AdminEmailAllowlist.PolicyName)]
     [ServiceFilter(typeof(AdminApiKeyFilter))]
     [RequestSizeLimit(MaximumRequestBytes)]
     public async Task<ActionResult<MusicUploadResponse>> Upload(
@@ -192,6 +194,7 @@ public sealed class SongsController(
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = AdminEmailAllowlist.PolicyName)]
     [ServiceFilter(typeof(AdminApiKeyFilter))]
     public async Task<ActionResult<SongResponse>> Update(
         string id,
@@ -230,6 +233,7 @@ public sealed class SongsController(
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = AdminEmailAllowlist.PolicyName)]
     [ServiceFilter(typeof(AdminApiKeyFilter))]
     public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
     {

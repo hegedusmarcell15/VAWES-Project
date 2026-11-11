@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Vawes.Models;
 
@@ -61,8 +63,104 @@ public sealed class AuthenticationTests
         client.DefaultRequestHeaders.Add("Cookie", cookie.Split(';')[0]);
         var current = await client.GetFromJsonAsync<JsonElement>("/api/auth/me");
         Assert.Equal("listener", current.GetProperty("user").GetProperty("username").GetString());
-        var logout = await client.PostAsync("/api/auth/logout", null);
+        using var logoutRequest = new HttpRequestMessage(HttpMethod.Post, "/api/auth/logout");
+        logoutRequest.Headers.Add("Origin", "http://localhost:5173");
+        var logout = await client.SendAsync(logoutRequest);
         Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
+    }
+
+    [Fact]
+    public async Task LogoutAllowsTrustedOriginAndClearsSession()
+    {
+        using var factory = new VawesApplicationFactory();
+        using var client = await CreateAuthenticatedClient(factory, "trustedlogout");
+
+        var logout = await SendLogout(client, origin: "https://vawes.app");
+
+        Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
+    }
+
+    [Fact]
+    public async Task LogoutRejectsUntrustedOriginEvenWithTrustedReferer()
+    {
+        using var factory = new VawesApplicationFactory();
+        using var client = await CreateAuthenticatedClient(factory, "untrustedlogout");
+
+        var logout = await SendLogout(
+            client,
+            origin: "https://attacker.example",
+            referer: "https://vawes.app/account");
+
+        Assert.Equal(HttpStatusCode.Forbidden, logout.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
+    }
+
+    [Fact]
+    public async Task LogoutRejectsNullOriginEvenWithTrustedReferer()
+    {
+        using var factory = new VawesApplicationFactory();
+        using var client = await CreateAuthenticatedClient(factory, "nulloriginlogout");
+
+        var logout = await SendLogout(client, origin: "null", referer: "https://vawes.app/account");
+
+        Assert.Equal(HttpStatusCode.Forbidden, logout.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
+    }
+
+    [Fact]
+    public async Task LogoutWithoutOriginUsesTrustedRefererAndRejectsMissingReferer()
+    {
+        using var factory = new VawesApplicationFactory();
+        using var trustedRefererClient = await CreateAuthenticatedClient(factory, "refererlogout");
+        using var noProvenanceClient = await CreateAuthenticatedClient(factory, "noprovenancelogout");
+
+        var trustedRefererLogout = await SendLogout(
+            trustedRefererClient,
+            referer: "https://vawes.app/account");
+        var noProvenanceLogout = await SendLogout(noProvenanceClient);
+
+        Assert.Equal(HttpStatusCode.NoContent, trustedRefererLogout.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, noProvenanceLogout.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await noProvenanceClient.GetAsync("/api/auth/me")).StatusCode);
+    }
+
+    [Fact]
+    public async Task AdminStatusAndEndpointsRequireDatabaseFlagAndAllowlistedEmail()
+    {
+        using var factory = new VawesApplicationFactory();
+        using var allowedAdmin = factory.CreateClient();
+        using var unlistedAdmin = factory.CreateClient();
+        using var listedNonAdmin = factory.CreateClient();
+
+        await SeedUser(factory, "allowedadmin", "FXADAMG@VAWES.APP", isAdmin: true);
+        await SeedUser(factory, "unlistedadmin", "other-admin@example.com", isAdmin: true);
+        await SeedUser(factory, "listeduser", "fxmarcellg@vawes.app", isAdmin: false);
+
+        var allowedLogin = await SignInAndGetUser(allowedAdmin, "allowedadmin", "StrongPass123");
+        Assert.True(allowedLogin.GetProperty("user").GetProperty("isAdmin").GetBoolean());
+        var currentUser = await allowedAdmin.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        Assert.True(currentUser.GetProperty("user").GetProperty("isAdmin").GetBoolean());
+        Assert.Equal(HttpStatusCode.OK, (await allowedAdmin.GetAsync("/users/AllUser")).StatusCode);
+
+        var unlistedLogin = await SignInAndGetUser(unlistedAdmin, "unlistedadmin", "StrongPass123");
+        Assert.False(unlistedLogin.GetProperty("user").GetProperty("isAdmin").GetBoolean());
+        var unlistedCurrentUser = await unlistedAdmin.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        Assert.False(unlistedCurrentUser.GetProperty("user").GetProperty("isAdmin").GetBoolean());
+        Assert.Equal(HttpStatusCode.Forbidden, (await unlistedAdmin.GetAsync("/users/AllUser")).StatusCode);
+
+        var listedLogin = await SignInAndGetUser(listedNonAdmin, "listeduser", "StrongPass123");
+        Assert.False(listedLogin.GetProperty("user").GetProperty("isAdmin").GetBoolean());
+        Assert.Equal(HttpStatusCode.Forbidden, (await listedNonAdmin.GetAsync("/users/AllUser")).StatusCode);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<VaweContext>();
+            var user = await context.Users.SingleAsync(item => item.Username == "allowedadmin");
+            user.IsAdmin = false;
+            await context.SaveChangesAsync();
+        }
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await allowedAdmin.GetAsync("/users/AllUser")).StatusCode);
     }
 
     [Fact]
@@ -176,6 +274,31 @@ public sealed class AuthenticationTests
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
+    private static async Task<HttpClient> CreateAuthenticatedClient(
+        VawesApplicationFactory factory,
+        string username)
+    {
+        var client = factory.CreateClient();
+        var email = $"{username}@example.com";
+        await Register(client, username, email);
+        var cookie = await SignIn(client, username, "StrongPass123");
+        client.DefaultRequestHeaders.Add("Cookie", cookie.Split(';')[0]);
+        return client;
+    }
+
+    private static async Task<HttpResponseMessage> SendLogout(
+        HttpClient client,
+        string? origin = null,
+        string? referer = null)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/logout");
+        if (origin is not null)
+            request.Headers.TryAddWithoutValidation("Origin", origin);
+        if (referer is not null)
+            request.Headers.Referrer = new Uri(referer);
+        return await client.SendAsync(request);
+    }
+
     private static async Task<string> SignIn(HttpClient client, string username, string password)
     {
         var response = await client.PostAsJsonAsync("/api/auth/login", new
@@ -186,5 +309,41 @@ public sealed class AuthenticationTests
         });
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         return Assert.Single(response.Headers.GetValues("Set-Cookie"));
+    }
+
+    private static async Task SeedUser(
+        VawesApplicationFactory factory,
+        string username,
+        string email,
+        bool isAdmin)
+    {
+        using var scope = factory.Services.CreateScope();
+        var services = scope.ServiceProvider;
+        var user = new User
+        {
+            Username = username,
+            Email = email,
+            IsAdmin = isAdmin,
+            CreatedAt = DateTime.UtcNow,
+        };
+        user.PasswordHash = services.GetRequiredService<IPasswordHasher<User>>()
+            .HashPassword(user, "StrongPass123");
+        var context = services.GetRequiredService<VaweContext>();
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task<JsonElement> SignInAndGetUser(HttpClient client, string identifier, string password)
+    {
+        var response = await client.PostAsJsonAsync("/api/auth/login", new
+        {
+            identifier,
+            password,
+            rememberMe = false,
+        });
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var cookie = Assert.Single(response.Headers.GetValues("Set-Cookie")).Split(';')[0];
+        client.DefaultRequestHeaders.Add("Cookie", cookie);
+        return (await response.Content.ReadFromJsonAsync<JsonElement>()).Clone();
     }
 }

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Vawes.DTOs;
@@ -16,6 +17,7 @@ public sealed class MusicUploadTests
     {
         using var factory = new VawesApplicationFactory();
         using var client = factory.CreateClient();
+        await SignInAsAdmin(factory, client);
         using var content = new MultipartFormDataContent();
         content.Add(new ByteArrayContent([1, 2, 3]), "file", "track.mp3");
 
@@ -29,6 +31,7 @@ public sealed class MusicUploadTests
     {
         using var factory = new VawesApplicationFactory();
         using var client = factory.CreateClient();
+        await SignInAsAdmin(factory, client);
         client.DefaultRequestHeaders.Add("X-VAWES-API-Key", VawesApplicationFactory.AdminKey);
         using var request = CreateUploadRequest([1, 2, 3], "not-music.txt");
 
@@ -42,6 +45,7 @@ public sealed class MusicUploadTests
     {
         using var factory = new VawesApplicationFactory();
         using var client = factory.CreateClient();
+        await SignInAsAdmin(factory, client);
         client.DefaultRequestHeaders.Add("X-VAWES-API-Key", VawesApplicationFactory.AdminKey);
         using var request = CreateUploadRequest([1, 2, 3], "corrupt.mp3");
 
@@ -55,6 +59,7 @@ public sealed class MusicUploadTests
     {
         using var factory = new VawesApplicationFactory();
         using var client = factory.CreateClient();
+        await SignInAsAdmin(factory, client);
         client.DefaultRequestHeaders.Add("X-VAWES-API-Key", VawesApplicationFactory.AdminKey);
         using var request = CreateUploadRequest(CreateMp3Frames(), "sample.mp3");
 
@@ -158,6 +163,36 @@ public sealed class MusicUploadTests
         content.Add(new StringContent("Integration test track"), "title");
         content.Add(new StringContent("Integration test artist"), "artist");
         return content;
+    }
+
+    private static async Task SignInAsAdmin(VawesApplicationFactory factory, HttpClient client)
+    {
+        using (var scope = factory.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            var user = new User
+            {
+                Username = "uploadadmin",
+                Email = "fxadamg@vawes.app",
+                IsAdmin = true,
+                CreatedAt = DateTime.UtcNow,
+            };
+            user.PasswordHash = services.GetRequiredService<IPasswordHasher<User>>()
+                .HashPassword(user, "StrongPass123");
+            var context = services.GetRequiredService<VaweContext>();
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+        }
+
+        var login = await client.PostAsJsonAsync("/api/auth/login", new
+        {
+            identifier = "uploadadmin",
+            password = "StrongPass123",
+            rememberMe = false,
+        });
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        var cookie = Assert.Single(login.Headers.GetValues("Set-Cookie")).Split(';')[0];
+        client.DefaultRequestHeaders.Add("Cookie", cookie);
     }
 
     private static byte[] CreateMp3Frames()
