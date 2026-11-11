@@ -14,10 +14,17 @@ export class ApiError extends Error {
 export async function apiGet(path, options = {}) {
   if (!apiBaseUrl) throw new ApiError('VITE_API_BASE_URL is not configured')
 
-  const response = await fetch(`${apiBaseUrl}/${path.replace(/^\/+/, '')}`, {
-    ...options,
-    headers: { Accept: 'application/json', ...options.headers },
-  })
+  let response
+  try {
+    response = await fetch(`${apiBaseUrl}/${path.replace(/^\/+/, '')}`, {
+      ...options,
+      credentials: 'include',
+      headers: { Accept: 'application/json', ...options.headers },
+    })
+  } catch (error) {
+    if (options.signal?.aborted) throw error
+    throw new ApiError('Could not connect to the VAWES API. Check the connection and try again.')
+  }
   if (!response.ok) {
     throw new ApiError(await responseMessage(response), response.status)
   }
@@ -55,6 +62,8 @@ export async function uploadSong({ file, key, title, artist, album, genre, onPro
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest()
     request.open('POST', `${apiBaseUrl}/songs`)
+    request.withCredentials = true
+    request.timeout = 120000
     request.setRequestHeader('Accept', 'application/json')
     request.setRequestHeader('X-VAWES-API-Key', key)
     request.upload.onprogress = (event) => {
@@ -62,6 +71,7 @@ export async function uploadSong({ file, key, title, artist, album, genre, onPro
     }
     request.onerror = () => reject(new ApiError('The upload request could not reach the API.'))
     request.onabort = () => reject(new ApiError('The upload was cancelled.'))
+    request.ontimeout = () => reject(new ApiError('The upload timed out. Check your connection and retry.'))
     request.onload = () => {
       if (request.status < 200 || request.status >= 300) {
         let message = request.responseText || `API request failed with status ${request.status}`

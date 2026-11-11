@@ -17,6 +17,8 @@ public partial class VaweContext : DbContext
 
     public virtual DbSet<Playlist> Playlists { get; set; }
 
+    public virtual DbSet<PlaylistSong> PlaylistSongs { get; set; }
+
     public virtual DbSet<Song> Songs { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -139,25 +141,28 @@ public partial class VaweContext : DbContext
                 .HasConstraintName("playlists_ibfk_1");
 
             entity.HasMany(d => d.Songs).WithMany(p => p.Playlists)
-                .UsingEntity<Dictionary<string, object>>(
-                    "PlaylistSong",
-                    r => r.HasOne<Song>().WithMany()
-                        .HasForeignKey("SongId")
+                .UsingEntity<PlaylistSong>(
+                    r => r.HasOne(link => link.Song).WithMany()
+                        .HasForeignKey(link => link.SongId)
                         .HasConstraintName("playlist_songs_ibfk_2"),
-                    l => l.HasOne<Playlist>().WithMany()
-                        .HasForeignKey("PlaylistId")
+                    l => l.HasOne(link => link.Playlist).WithMany()
+                        .HasForeignKey(link => link.PlaylistId)
                         .HasConstraintName("playlist_songs_ibfk_1"),
                     j =>
                     {
-                        j.HasKey("PlaylistId", "SongId").HasName("PRIMARY");
+                        j.HasKey(link => new { link.PlaylistId, link.SongId }).HasName("PRIMARY");
                         j.ToTable("playlist_songs");
-                        j.HasIndex(new[] { "SongId" }, "song_id");
-                        j.IndexerProperty<int>("PlaylistId")
+                        j.HasIndex(link => link.SongId, "song_id");
+                        j.Property(link => link.PlaylistId)
                             .HasColumnType("int(11)")
                             .HasColumnName("playlist_id");
-                        j.IndexerProperty<int>("SongId")
+                        j.Property(link => link.SongId)
                             .HasColumnType("int(11)")
                             .HasColumnName("song_id");
+                        j.Property(link => link.Position)
+                            .HasColumnType("int(11)")
+                            .HasDefaultValue(0)
+                            .HasColumnName("position");
                     });
         });
 

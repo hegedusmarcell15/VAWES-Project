@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { fmt } from '../catalogUtils.js'
 import { useCatalog } from '../CatalogContext.jsx'
 import { usePlayerActions, usePlayerState } from '../PlayerContext.jsx'
@@ -6,13 +7,15 @@ import CatalogSkeleton from '../components/CatalogSkeleton.jsx'
 import FavoriteButton from '../components/FavoriteButton.jsx'
 import { AlbumLink, ArtistLink } from '../components/TrackLinks.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
+import { useAuth } from '../AuthContext.jsx'
 
 export default function Favorites() {
-  const { catalog, favorites, status } = useCatalog()
+  const { user } = useAuth()
+  const { catalog, favorites, favoriteError, status } = useCatalog()
   const { current } = usePlayerState()
   const { play, playQueue } = usePlayerActions()
   const { t } = useLanguage()
-  const songs = useMemo(() => catalog.songs.filter((song) => favorites.includes(song.id)), [catalog.songs, favorites])
+  const songs = useMemo(() => catalog.songs.filter((song) => favorites.some((id) => String(id) === String(song.id))), [catalog.songs, favorites])
 
   if (status === 'loading') return <CatalogSkeleton rows={6} />
   return (
@@ -21,7 +24,8 @@ export default function Favorites() {
         <h1>{t('favorites')}</h1>
         {songs.length > 0 && <button className="chip on" type="button" onClick={() => playQueue(songs)}>{t('playAll')}</button>}
       </div>
-      {songs.length === 0 ? <p className="empty">{t('noFavorites')}</p> : (
+      {favoriteError && <p className="catalog-offline" role="alert">{favoriteError}</p>}
+      {!user ? <p className="empty">{t('signInToSave')} <Link to="/login">{t('authLogin')}</Link></p> : songs.length === 0 ? <p className="empty">{t('noFavorites')}</p> : (
         <table>
           <thead><tr><th>{t('title')}</th><th>{t('album')}</th><th>{t('duration')}</th><th /></tr></thead>
           <tbody>{songs.map((song) => (

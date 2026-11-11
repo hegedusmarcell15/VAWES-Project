@@ -14,6 +14,7 @@ namespace Vawes.Controllers;
 public sealed class SongsController(
     VaweContext context,
     MusicStorage musicStorage,
+    DeezerArtworkLookup artworkLookup,
     ILogger<SongsController> logger) : ControllerBase
 {
     private const long MaximumUploadBytes = 50 * 1024 * 1024;
@@ -152,6 +153,17 @@ public sealed class SongsController(
                 song.AlbumId == albumId, cancellationToken);
             if (duplicate)
                 return Conflict(new ProblemDetails { Title = "This song is already in the catalog." });
+
+            if (albumEntity is not null && string.IsNullOrWhiteSpace(albumEntity.CoverUrl))
+            {
+                var coverUrl = await artworkLookup.FindAlbumCoverAsync(
+                    albumEntity.Title, artistEntity.Name, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(coverUrl))
+                {
+                    albumEntity.CoverUrl = coverUrl;
+                    await context.SaveChangesAsync(cancellationToken);
+                }
+            }
 
             var song = new Song
             {
