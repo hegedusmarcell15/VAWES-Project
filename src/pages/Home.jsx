@@ -1,9 +1,13 @@
-import { Link, useParams } from 'react-router-dom'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { playlists, songs, fmt } from '../data.js'
+import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { fmt } from '../catalogUtils.js'
 import heroHeadlines from '../hero-headlines.json'
 import { usePlayerActions, usePlayerState } from '../PlayerContext.jsx'
+import { useCatalog } from '../CatalogContext.jsx'
 import Cover from '../components/Cover.jsx'
+import FavoriteButton from '../components/FavoriteButton.jsx'
+import { ArtistLink } from '../components/TrackLinks.jsx'
+import CatalogSkeleton from '../components/CatalogSkeleton.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
 import Icon from '../components/Icon.jsx'
 
@@ -26,6 +30,7 @@ function getHeadline(language) {
 }
 
 function DiscoverHome() {
+  const { catalog, status } = useCatalog()
   const { current } = usePlayerState()
   const { play } = usePlayerActions()
   const { language, t, playlistName } = useLanguage()
@@ -42,8 +47,9 @@ function DiscoverHome() {
     window.addEventListener('vawes-avatar-change', updateAvatar)
     return () => window.removeEventListener('vawes-avatar-change', updateAvatar)
   }, [])
-  const releases = songs.slice(0, 5)
-  const featured = playlists.slice(0, 4)
+  const releases = catalog.songs.slice(0, 5)
+  const featured = catalog.playlists.slice(0, 4)
+  if (status === 'loading') return <CatalogSkeleton rows={5} />
 
   return (
     <div className="discover">
@@ -69,27 +75,26 @@ function DiscoverHome() {
           </div>
           <Link className="text-link" to="/kereses">{t('allTracks')} <Icon name="arrowRight" size={14} /></Link>
         </div>
-        <div className="release-list">
+        {status === 'ready' && releases.length === 0
+          ? <p className="empty">{t('catalogEmpty')}</p>
+          : <div className="release-list">
           {releases.map((song, index) => {
-            const playlist = playlists.find((p) => p.id === song.playlist)
+            const playlist = catalog.playlists.find((p) => String(p.id) === String(song.playlist))
             return (
-              <button
-                key={song.id}
-                className={`release ${current.id === song.id ? 'active' : ''}`}
-                onClick={() => play(song)}
-              >
+              <div key={song.id} className={`release ${current.id === song.id ? 'active' : ''}`}>
                 <span className="release-number">{String(index + 1).padStart(2, '0')}</span>
-                <Cover color={playlist.color} size="sm" image={song.cover_url} />
+                <Cover color={playlist?.color ?? 'violet'} size="sm" image={song.cover_url} />
                 <span className="release-copy">
-                  <strong>{song.title}</strong>
-                  <small>{song.artist}</small>
+                  <strong><button className="text-button" type="button" onClick={() => play(song)}>{song.title}</button></strong>
+                  <small><ArtistLink id={song.artist_id}>{song.artist}</ArtistLink></small>
                 </span>
                 <span className="release-duration">{fmt(song.duration_sec)}</span>
-                <span className="release-play"><Icon name={current.id === song.id ? 'pause' : 'play'} size={13} /></span>
-              </button>
+                <FavoriteButton song={song} />
+                <button className="release-play" type="button" aria-label={`${t('play')}: ${song.title}`} onClick={() => play(song)}><Icon name={current.id === song.id ? 'pause' : 'play'} size={13} /></button>
+              </div>
             )
           })}
-        </div>
+          </div>}
       </section>
 
       <section className="discover-section">
@@ -117,34 +122,5 @@ function DiscoverHome() {
 }
 
 export default function Home() {
-  const { id } = useParams()
-  const { t, playlistName } = useLanguage()
-  const pl = playlists.find((p) => p.id === id) ?? playlists[0]
-  const list = useMemo(() => songs.filter((s) => s.playlist === pl.id), [pl.id])
-  const { current } = usePlayerState()
-  const { play } = usePlayerActions()
-  if (!id) return <DiscoverHome />
-
-  return (
-    <>
-      <div className="playlist-header">
-        <Cover color={pl.color} size="big" image={pl.cover_url} />
-        <div>
-          <p className="meta">{t('playlist')}</p>
-          <h1>{playlistName(pl.id)}</h1>
-          <p className="meta">VAWES · {t('tracks', pl.tracks, pl.minutes)}</p>
-        </div>
-      </div>
-      <table>
-        <thead><tr><th>#</th><th>{t('title')}</th><th>{t('album')}</th><th>{t('duration')}</th></tr></thead>
-        <tbody>
-          {list.map((s, i) => (
-            <tr key={s.id} className={`row ${current.id === s.id ? 'playing' : ''}`} onClick={() => play(s)}>
-              <td>{i + 1}</td><td className="t">{s.title}</td><td>{s.artist} · {s.album}</td><td>{fmt(s.duration_sec)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </>
-  )
+  return <DiscoverHome />
 }

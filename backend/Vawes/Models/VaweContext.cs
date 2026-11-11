@@ -17,6 +17,8 @@ public partial class VaweContext : DbContext
 
     public virtual DbSet<Playlist> Playlists { get; set; }
 
+    public virtual DbSet<PlaylistSong> PlaylistSongs { get; set; }
+
     public virtual DbSet<Song> Songs { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -30,6 +32,7 @@ public partial class VaweContext : DbContext
             entity.ToTable("albums");
 
             entity.HasIndex(e => e.ArtistId, "artist_id");
+            entity.HasIndex(e => e.Slug, "uq_albums_slug").IsUnique();
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -49,6 +52,9 @@ public partial class VaweContext : DbContext
                 .HasDefaultValueSql("'NULL'")
                 .HasColumnType("smallint(6)")
                 .HasColumnName("release_year");
+            entity.Property(e => e.Slug)
+                .HasMaxLength(255)
+                .HasColumnName("slug");
             entity.Property(e => e.Title)
                 .HasMaxLength(200)
                 .HasColumnName("title");
@@ -64,6 +70,8 @@ public partial class VaweContext : DbContext
 
             entity.ToTable("artists");
 
+            entity.HasIndex(e => e.Slug, "uq_artists_slug").IsUnique();
+
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
                 .HasColumnName("id");
@@ -71,6 +79,9 @@ public partial class VaweContext : DbContext
                 .HasDefaultValueSql("'NULL'")
                 .HasColumnType("text")
                 .HasColumnName("bio");
+            entity.Property(e => e.CoverUrl)
+                .HasMaxLength(500)
+                .HasColumnName("cover_url");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("'current_timestamp()'")
                 .HasColumnType("datetime")
@@ -78,6 +89,9 @@ public partial class VaweContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(150)
                 .HasColumnName("name");
+            entity.Property(e => e.Slug)
+                .HasMaxLength(160)
+                .HasColumnName("slug");
         });
 
         modelBuilder.Entity<Playlist>(entity =>
@@ -87,6 +101,7 @@ public partial class VaweContext : DbContext
             entity.ToTable("playlists");
 
             entity.HasIndex(e => e.UserId, "user_id");
+            entity.HasIndex(e => e.Slug, "uq_playlists_slug").IsUnique();
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -94,6 +109,29 @@ public partial class VaweContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(150)
                 .HasColumnName("name");
+            entity.Property(e => e.Color)
+                .HasMaxLength(32)
+                .HasDefaultValue("violet")
+                .HasColumnName("color");
+            entity.Property(e => e.CoverUrl)
+                .HasMaxLength(500)
+                .HasColumnName("cover_url");
+            entity.Property(e => e.Minutes)
+                .HasColumnType("int(11)")
+                .HasColumnName("minutes");
+            entity.Property(e => e.Recent)
+                .HasColumnType("int(11)")
+                .HasColumnName("recent");
+            entity.Property(e => e.Slug)
+                .HasMaxLength(160)
+                .HasColumnName("slug");
+            entity.Property(e => e.Tracks)
+                .HasColumnType("int(11)")
+                .HasColumnName("tracks");
+            entity.Property(e => e.Type)
+                .HasMaxLength(32)
+                .HasDefaultValue("vawes")
+                .HasColumnName("type");
             entity.Property(e => e.UserId)
                 .HasColumnType("int(11)")
                 .HasColumnName("user_id");
@@ -103,25 +141,28 @@ public partial class VaweContext : DbContext
                 .HasConstraintName("playlists_ibfk_1");
 
             entity.HasMany(d => d.Songs).WithMany(p => p.Playlists)
-                .UsingEntity<Dictionary<string, object>>(
-                    "PlaylistSong",
-                    r => r.HasOne<Song>().WithMany()
-                        .HasForeignKey("SongId")
+                .UsingEntity<PlaylistSong>(
+                    r => r.HasOne(link => link.Song).WithMany()
+                        .HasForeignKey(link => link.SongId)
                         .HasConstraintName("playlist_songs_ibfk_2"),
-                    l => l.HasOne<Playlist>().WithMany()
-                        .HasForeignKey("PlaylistId")
+                    l => l.HasOne(link => link.Playlist).WithMany()
+                        .HasForeignKey(link => link.PlaylistId)
                         .HasConstraintName("playlist_songs_ibfk_1"),
                     j =>
                     {
-                        j.HasKey("PlaylistId", "SongId").HasName("PRIMARY");
+                        j.HasKey(link => new { link.PlaylistId, link.SongId }).HasName("PRIMARY");
                         j.ToTable("playlist_songs");
-                        j.HasIndex(new[] { "SongId" }, "song_id");
-                        j.IndexerProperty<int>("PlaylistId")
+                        j.HasIndex(link => link.SongId, "song_id");
+                        j.Property(link => link.PlaylistId)
                             .HasColumnType("int(11)")
                             .HasColumnName("playlist_id");
-                        j.IndexerProperty<int>("SongId")
+                        j.Property(link => link.SongId)
                             .HasColumnType("int(11)")
                             .HasColumnName("song_id");
+                        j.Property(link => link.Position)
+                            .HasColumnType("int(11)")
+                            .HasDefaultValue(0)
+                            .HasColumnName("position");
                     });
         });
 
@@ -134,6 +175,7 @@ public partial class VaweContext : DbContext
             entity.HasIndex(e => e.AlbumId, "album_id");
 
             entity.HasIndex(e => e.ArtistId, "artist_id");
+            entity.HasIndex(e => e.Slug, "uq_songs_slug").IsUnique();
 
             entity.Property(e => e.Id)
                 .HasColumnType("int(11)")
@@ -155,6 +197,9 @@ public partial class VaweContext : DbContext
                 .HasMaxLength(100)
                 .HasDefaultValueSql("'NULL'")
                 .HasColumnName("genre");
+            entity.Property(e => e.Slug)
+                .HasMaxLength(255)
+                .HasColumnName("slug");
             entity.Property(e => e.Title)
                 .HasMaxLength(200)
                 .HasColumnName("title");

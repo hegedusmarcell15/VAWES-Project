@@ -12,7 +12,7 @@ RUN dotnet publish Vawes.csproj --configuration Release --output /app/publish --
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app/publish .
-RUN mkdir -p /var/lib/vawes/songs && chown -R 1654:1654 /var/lib/vawes
+RUN mkdir -p /var/lib/vawes/songs /var/lib/vawes/keys && chown -R 1654:1654 /var/lib/vawes
 ENV ASPNETCORE_URLS=http://+:8080 \
     MusicStorage__Directory=/var/lib/vawes/songs
 EXPOSE 8080
