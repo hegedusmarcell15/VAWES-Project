@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Vawes.Models;
+using Vawes.Security;
 
 namespace Vawes.Controllers;
 
@@ -16,7 +17,9 @@ namespace Vawes.Controllers;
 [Route("api/auth")]
 public sealed partial class AuthController(
     VaweContext context,
-    IPasswordHasher<User> passwordHasher) : ControllerBase
+    IPasswordHasher<User> passwordHasher,
+    AdminEmailAllowlist adminEmailAllowlist,
+    IConfiguration configuration) : ControllerBase
 {
     private static readonly string DummyPasswordHash = CreateDummyPasswordHash();
 
@@ -101,7 +104,8 @@ public sealed partial class AuthController(
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.Username),
         };
-        if (user.IsAdmin) claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+        if (adminEmailAllowlist.IsAllowed(user))
+            claims.Add(new Claim(ClaimTypes.Role, "Admin"));
 
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
@@ -120,6 +124,16 @@ public sealed partial class AuthController(
     [Authorize]
     public async Task<IActionResult> Logout()
     {
+        var origins = Request.Headers.Origin;
+        var trustedRequest = origins.Count > 0
+            ? origins.Count == 1 && FrontendOriginValidator.IsTrustedOrigin(origins[0], configuration)
+            : Request.Headers.Referer.Count == 1 &&
+              FrontendOriginValidator.IsTrustedReferer(Request.Headers.Referer[0], configuration);
+        if (!trustedRequest)
+            return Problem(
+                title: "Logout requests must come from a trusted frontend origin.",
+                statusCode: StatusCodes.Status403Forbidden);
+
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return NoContent();
     }
@@ -140,12 +154,12 @@ public sealed partial class AuthController(
         return Ok(new { user = PublicUser(user) });
     }
 
-    private static object PublicUser(User user) => new
+    private object PublicUser(User user) => new
     {
         user.Id,
         user.Username,
         user.Email,
-        user.IsAdmin,
+        isAdmin = adminEmailAllowlist.IsAllowed(user),
     };
 
     private static bool PasswordIsStrong(string password) =>

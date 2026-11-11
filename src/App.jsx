@@ -12,13 +12,25 @@ import { LanguageProvider } from './LanguageContext.jsx'
 import { CatalogProvider } from './CatalogContext.jsx'
 import { AuthProvider } from './AuthContext.jsx'
 import { useAuth } from './AuthContext.jsx'
+import { isAllowedAdmin } from './adminAccess.js'
 import AuthPage from './pages/AuthPage.jsx'
+import AdminLogin from './pages/AdminLogin.jsx'
+import AdminDashboard from './pages/AdminDashboard.jsx'
 
 function RequireAuth() {
   const { user, status } = useAuth()
 
   if (status === 'loading') return <main className="auth-page" aria-busy="true" />
   if (!user) return <Navigate to="/login" replace />
+  return <Outlet />
+}
+
+function RequireAdmin() {
+  const { user, status } = useAuth()
+
+  if (status === 'loading') return <main className="auth-page" aria-busy="true" />
+  if (!user) return <Navigate to="/admin/login" replace />
+  if (!isAllowedAdmin(user)) return <Navigate to="/" replace />
   return <Outlet />
 }
 
@@ -31,6 +43,10 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<AuthPage />} />
               <Route path="/register" element={<AuthPage />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route element={<RequireAdmin />}>
+                <Route path="/admin" element={<AdminDashboard />} />
+              </Route>
               <Route element={<RequireAuth />}>
                 <Route element={<Layout />}>
                   <Route index element={<Home />} />
