@@ -77,7 +77,7 @@ if (!string.IsNullOrWhiteSpace(dataProtectionPath))
         throw new InvalidOperationException("Data Protection certificate configuration is missing.");
     }
 
-    var certificate = new X509Certificate2(
+    var certificate = X509CertificateLoader.LoadPkcs12FromFile(
         certificatePath,
         certificatePassword,
         X509KeyStorageFlags.EphemeralKeySet
