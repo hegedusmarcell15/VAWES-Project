@@ -16,6 +16,8 @@ import { isAllowedAdmin } from './adminAccess.js'
 import AuthPage from './pages/AuthPage.jsx'
 import AdminLogin from './pages/AdminLogin.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 
 function RequireAuth() {
   const { user, status } = useAuth()
@@ -43,6 +45,8 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<AuthPage />} />
               <Route path="/register" element={<AuthPage />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route element={<RequireAdmin />}>
                 <Route path="/admin" element={<AdminDashboard />} />

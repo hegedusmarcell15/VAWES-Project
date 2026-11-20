@@ -183,7 +183,11 @@ export default function AuthPage() {
               <span>{t('authRememberMe')}</span>
             </label>
           )}
-
+            {!isRegister && (
+              <p className="auth-switch" style={{ margin: 0, textAlign: 'right' }}>
+                <Link to="/forgot-password">Forgot password?</Link>
+              </p>
+            )}
           {(error || authError) && <p className="auth-feedback is-error" role="alert">{error || authError}</p>}
           {success && <p className="auth-feedback is-success" role="status">{success}</p>}
           <button className="auth-submit" type="submit" disabled={busy}>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,52 +13,29 @@ public partial class VaweContext : DbContext
     }
 
     public virtual DbSet<Album> Albums { get; set; }
-
     public virtual DbSet<Artist> Artists { get; set; }
-
     public virtual DbSet<Playlist> Playlists { get; set; }
-
     public virtual DbSet<PlaylistSong> PlaylistSongs { get; set; }
-
     public virtual DbSet<Song> Songs { get; set; }
-
     public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Album>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
-
             entity.ToTable("albums");
-
             entity.HasIndex(e => e.ArtistId, "artist_id");
             entity.HasIndex(e => e.Slug, "uq_albums_slug").IsUnique();
 
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.ArtistId)
-                .HasColumnType("int(11)")
-                .HasColumnName("artist_id");
-            entity.Property(e => e.CoverUrl)
-                .HasMaxLength(500)
-                .HasDefaultValueSql("'NULL'")
-                .HasColumnName("cover_url");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("'current_timestamp()'")
-                .HasColumnType("datetime")
-                .HasColumnName("created_at");
-            entity.Property(e => e.ReleaseYear)
-                .HasDefaultValueSql("'NULL'")
-                .HasColumnType("smallint(6)")
-                .HasColumnName("release_year");
-            entity.Property(e => e.Slug)
-                .HasMaxLength(255)
-                .HasColumnName("slug");
-            entity.Property(e => e.Title)
-                .HasMaxLength(200)
-                .HasColumnName("title");
+            entity.Property(e => e.Id).HasColumnType("int(11)").HasColumnName("id");
+            entity.Property(e => e.ArtistId).HasColumnType("int(11)").HasColumnName("artist_id");
+            entity.Property(e => e.CoverUrl).HasMaxLength(500).HasDefaultValueSql("'NULL'").HasColumnName("cover_url");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("'current_timestamp()'").HasColumnType("datetime").HasColumnName("created_at");
+            entity.Property(e => e.ReleaseYear).HasDefaultValueSql("'NULL'").HasColumnType("smallint(6)").HasColumnName("release_year");
+            entity.Property(e => e.Slug).HasMaxLength(255).HasColumnName("slug");
+            entity.Property(e => e.Title).HasMaxLength(200).HasColumnName("title");
 
             entity.HasOne(d => d.Artist).WithMany(p => p.Albums)
                 .HasForeignKey(d => d.ArtistId)
@@ -67,74 +45,34 @@ public partial class VaweContext : DbContext
         modelBuilder.Entity<Artist>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
-
             entity.ToTable("artists");
-
             entity.HasIndex(e => e.Slug, "uq_artists_slug").IsUnique();
 
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.Bio)
-                .HasDefaultValueSql("'NULL'")
-                .HasColumnType("text")
-                .HasColumnName("bio");
-            entity.Property(e => e.CoverUrl)
-                .HasMaxLength(500)
-                .HasColumnName("cover_url");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("'current_timestamp()'")
-                .HasColumnType("datetime")
-                .HasColumnName("created_at");
-            entity.Property(e => e.Name)
-                .HasMaxLength(150)
-                .HasColumnName("name");
-            entity.Property(e => e.Slug)
-                .HasMaxLength(160)
-                .HasColumnName("slug");
+            entity.Property(e => e.Id).HasColumnType("int(11)").HasColumnName("id");
+            entity.Property(e => e.Bio).HasDefaultValueSql("'NULL'").HasColumnType("text").HasColumnName("bio");
+            entity.Property(e => e.CoverUrl).HasMaxLength(500).HasColumnName("cover_url");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("'current_timestamp()'").HasColumnType("datetime").HasColumnName("created_at");
+            entity.Property(e => e.Name).HasMaxLength(150).HasColumnName("name");
+            entity.Property(e => e.Slug).HasMaxLength(160).HasColumnName("slug");
         });
 
         modelBuilder.Entity<Playlist>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
-
             entity.ToTable("playlists");
-
             entity.HasIndex(e => e.UserId, "user_id");
             entity.HasIndex(e => e.Slug, "uq_playlists_slug").IsUnique();
 
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.Name)
-                .HasMaxLength(150)
-                .HasColumnName("name");
-            entity.Property(e => e.Color)
-                .HasMaxLength(32)
-                .HasDefaultValue("violet")
-                .HasColumnName("color");
-            entity.Property(e => e.CoverUrl)
-                .HasMaxLength(500)
-                .HasColumnName("cover_url");
-            entity.Property(e => e.Minutes)
-                .HasColumnType("int(11)")
-                .HasColumnName("minutes");
-            entity.Property(e => e.Recent)
-                .HasColumnType("int(11)")
-                .HasColumnName("recent");
-            entity.Property(e => e.Slug)
-                .HasMaxLength(160)
-                .HasColumnName("slug");
-            entity.Property(e => e.Tracks)
-                .HasColumnType("int(11)")
-                .HasColumnName("tracks");
-            entity.Property(e => e.Type)
-                .HasMaxLength(32)
-                .HasDefaultValue("vawes")
-                .HasColumnName("type");
-            entity.Property(e => e.UserId)
-                .HasColumnType("int(11)")
-                .HasColumnName("user_id");
+            entity.Property(e => e.Id).HasColumnType("int(11)").HasColumnName("id");
+            entity.Property(e => e.Name).HasMaxLength(150).HasColumnName("name");
+            entity.Property(e => e.Color).HasMaxLength(32).HasDefaultValue("violet").HasColumnName("color");
+            entity.Property(e => e.CoverUrl).HasMaxLength(500).HasColumnName("cover_url");
+            entity.Property(e => e.Minutes).HasColumnType("int(11)").HasColumnName("minutes");
+            entity.Property(e => e.Recent).HasColumnType("int(11)").HasColumnName("recent");
+            entity.Property(e => e.Slug).HasMaxLength(160).HasColumnName("slug");
+            entity.Property(e => e.Tracks).HasColumnType("int(11)").HasColumnName("tracks");
+            entity.Property(e => e.Type).HasMaxLength(32).HasDefaultValue("vawes").HasColumnName("type");
+            entity.Property(e => e.UserId).HasColumnType("int(11)").HasColumnName("user_id");
 
             entity.HasOne(d => d.User).WithMany(p => p.Playlists)
                 .HasForeignKey(d => d.UserId)
@@ -153,60 +91,29 @@ public partial class VaweContext : DbContext
                         j.HasKey(link => new { link.PlaylistId, link.SongId }).HasName("PRIMARY");
                         j.ToTable("playlist_songs");
                         j.HasIndex(link => link.SongId, "song_id");
-                        j.Property(link => link.PlaylistId)
-                            .HasColumnType("int(11)")
-                            .HasColumnName("playlist_id");
-                        j.Property(link => link.SongId)
-                            .HasColumnType("int(11)")
-                            .HasColumnName("song_id");
-                        j.Property(link => link.Position)
-                            .HasColumnType("int(11)")
-                            .HasDefaultValue(0)
-                            .HasColumnName("position");
+                        j.Property(link => link.PlaylistId).HasColumnType("int(11)").HasColumnName("playlist_id");
+                        j.Property(link => link.SongId).HasColumnType("int(11)").HasColumnName("song_id");
+                        j.Property(link => link.Position).HasColumnType("int(11)").HasDefaultValue(0).HasColumnName("position");
                     });
         });
 
         modelBuilder.Entity<Song>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
-
             entity.ToTable("songs");
-
             entity.HasIndex(e => e.AlbumId, "album_id");
-
             entity.HasIndex(e => e.ArtistId, "artist_id");
             entity.HasIndex(e => e.Slug, "uq_songs_slug").IsUnique();
 
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.AlbumId)
-                .HasDefaultValueSql("'NULL'")
-                .HasColumnType("int(11)")
-                .HasColumnName("album_id");
-            entity.Property(e => e.ArtistId)
-                .HasColumnType("int(11)")
-                .HasColumnName("artist_id");
-            entity.Property(e => e.DurationSec)
-                .HasColumnType("int(11)")
-                .HasColumnName("duration_sec");
-            entity.Property(e => e.FilePath)
-                .HasMaxLength(500)
-                .HasColumnName("file_path");
-            entity.Property(e => e.Genre)
-                .HasMaxLength(100)
-                .HasDefaultValueSql("'NULL'")
-                .HasColumnName("genre");
-            entity.Property(e => e.Slug)
-                .HasMaxLength(255)
-                .HasColumnName("slug");
-            entity.Property(e => e.Title)
-                .HasMaxLength(200)
-                .HasColumnName("title");
-            entity.Property(e => e.UploadedAt)
-                .HasDefaultValueSql("'current_timestamp()'")
-                .HasColumnType("datetime")
-                .HasColumnName("uploaded_at");
+            entity.Property(e => e.Id).HasColumnType("int(11)").HasColumnName("id");
+            entity.Property(e => e.AlbumId).HasDefaultValueSql("'NULL'").HasColumnType("int(11)").HasColumnName("album_id");
+            entity.Property(e => e.ArtistId).HasColumnType("int(11)").HasColumnName("artist_id");
+            entity.Property(e => e.DurationSec).HasColumnType("int(11)").HasColumnName("duration_sec");
+            entity.Property(e => e.FilePath).HasMaxLength(500).HasColumnName("file_path");
+            entity.Property(e => e.Genre).HasMaxLength(100).HasDefaultValueSql("'NULL'").HasColumnName("genre");
+            entity.Property(e => e.Slug).HasMaxLength(255).HasColumnName("slug");
+            entity.Property(e => e.Title).HasMaxLength(200).HasColumnName("title");
+            entity.Property(e => e.UploadedAt).HasDefaultValueSql("'current_timestamp()'").HasColumnType("datetime").HasColumnName("uploaded_at");
 
             entity.HasOne(d => d.Album).WithMany(p => p.Songs)
                 .HasForeignKey(d => d.AlbumId)
@@ -221,32 +128,17 @@ public partial class VaweContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
-
             entity.ToTable("users");
-
             entity.HasIndex(e => e.Email, "email").IsUnique();
-
             entity.HasIndex(e => e.Username, "username").IsUnique();
 
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("'current_timestamp()'")
-                .HasColumnType("datetime")
-                .HasColumnName("created_at");
+            entity.Property(e => e.Id).HasColumnType("int(11)").HasColumnName("id");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("'current_timestamp()'").HasColumnType("datetime").HasColumnName("created_at");
             entity.Property(e => e.Email).HasColumnName("email");
             entity.Property(e => e.IsAdmin).HasColumnName("is_admin");
-            entity.Property(e => e.LastLoginAt)
-                .HasDefaultValueSql("'NULL'")
-                .HasColumnType("datetime")
-                .HasColumnName("last_login_at");
-            entity.Property(e => e.PasswordHash)
-                .HasMaxLength(255)
-                .HasColumnName("password_hash");
-            entity.Property(e => e.Username)
-                .HasMaxLength(50)
-                .HasColumnName("username");
+            entity.Property(e => e.LastLoginAt).HasDefaultValueSql("'NULL'").HasColumnType("datetime").HasColumnName("last_login_at");
+            entity.Property(e => e.PasswordHash).HasMaxLength(255).HasColumnName("password_hash");
+            entity.Property(e => e.Username).HasMaxLength(50).HasColumnName("username");
 
             entity.HasMany(d => d.Songs).WithMany(p => p.Users)
                 .UsingEntity<Dictionary<string, object>>(
@@ -262,13 +154,29 @@ public partial class VaweContext : DbContext
                         j.HasKey("UserId", "SongId").HasName("PRIMARY");
                         j.ToTable("favorites");
                         j.HasIndex(new[] { "SongId" }, "song_id");
-                        j.IndexerProperty<int>("UserId")
-                            .HasColumnType("int(11)")
-                            .HasColumnName("user_id");
-                        j.IndexerProperty<int>("SongId")
-                            .HasColumnType("int(11)")
-                            .HasColumnName("song_id");
+                        j.IndexerProperty<int>("UserId").HasColumnType("int(11)").HasColumnName("user_id");
+                        j.IndexerProperty<int>("SongId").HasColumnType("int(11)").HasColumnName("song_id");
                     });
+        });
+
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+            entity.ToTable("password_reset_tokens");
+
+            entity.HasIndex(e => e.TokenHash, "uq_password_reset_tokens_token_hash").IsUnique();
+            entity.HasIndex(e => e.UserId, "user_id");
+
+            entity.Property(e => e.Id).HasColumnType("int(11)").HasColumnName("id");
+            entity.Property(e => e.UserId).HasColumnType("int(11)").HasColumnName("user_id");
+            entity.Property(e => e.TokenHash).HasMaxLength(64).HasColumnName("token_hash");
+            entity.Property(e => e.ExpiresAt).HasColumnType("datetime").HasColumnName("expires_at");
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime").HasColumnName("created_at");
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -26,6 +26,7 @@ namespace Vawes
             builder.Services.AddSingleton<Vawes.Security.AdminEmailAllowlist>();
             builder.Services.AddScoped<IAuthorizationHandler, Vawes.Security.AdminAccessAuthorizationHandler>();
             builder.Services.AddSingleton<Vawes.Services.MusicStorage>();
+            builder.Services.AddScoped<Vawes.Services.EmailService>();
             builder.Services.AddMemoryCache();
             builder.Services.AddHttpClient<Vawes.Services.DeezerArtworkLookup>(client =>
             {

@@ -1,5 +1,8 @@
+
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -10,6 +13,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Vawes.Models;
 using Vawes.Security;
+using Vawes.Services;
 
 namespace Vawes.Controllers;
 
@@ -19,7 +23,9 @@ public sealed partial class AuthController(
     VaweContext context,
     IPasswordHasher<User> passwordHasher,
     AdminEmailAllowlist adminEmailAllowlist,
-    IConfiguration configuration) : ControllerBase
+    IConfiguration configuration,
+    EmailService emailService,
+    ILogger<AuthController> logger) : ControllerBase
 {
     private static readonly string DummyPasswordHash = CreateDummyPasswordHash();
 
@@ -31,11 +37,13 @@ public sealed partial class AuthController(
     {
         var username = request.Username.Trim();
         var email = request.Email.Trim().ToLowerInvariant();
+
         if (!UsernamePattern().IsMatch(username))
             return BadRequest(new ProblemDetails
             {
                 Title = "Username must be 3-50 characters and use only letters, numbers, dots, underscores, or hyphens.",
             });
+
         if (!PasswordIsStrong(request.Password))
             return BadRequest(new ProblemDetails
             {
@@ -44,6 +52,7 @@ public sealed partial class AuthController(
 
         if (await context.Users.AnyAsync(user => user.Username == username, cancellationToken))
             return Conflict(new ProblemDetails { Title = "That username is already registered." });
+
         if (await context.Users.AnyAsync(user => user.Email == email, cancellationToken))
             return Conflict(new ProblemDetails { Title = "That email address is already registered." });
 
@@ -54,8 +63,10 @@ public sealed partial class AuthController(
             CreatedAt = DateTime.UtcNow,
             IsAdmin = false,
         };
+
         user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
         context.Users.Add(user);
+
         try
         {
             await context.SaveChangesAsync(cancellationToken);
@@ -65,8 +76,13 @@ public sealed partial class AuthController(
             var duplicate = await context.Users.AsNoTracking().AnyAsync(
                 existing => existing.Username == username || existing.Email == email,
                 cancellationToken);
+
             if (!duplicate) throw;
-            return Conflict(new ProblemDetails { Title = "That username or email address is already registered." });
+
+            return Conflict(new ProblemDetails
+            {
+                Title = "That username or email address is already registered."
+            });
         }
 
         return StatusCode(StatusCodes.Status201Created, new
@@ -84,18 +100,27 @@ public sealed partial class AuthController(
     {
         var identifier = request.Identifier.Trim();
         var normalizedIdentifier = identifier.ToLowerInvariant();
+
         var user = await context.Users.FirstOrDefaultAsync(
             candidate => candidate.Email == normalizedIdentifier || candidate.Username == identifier,
             cancellationToken);
+
         var hashToVerify = user?.PasswordHash ?? DummyPasswordHash;
-        var verification = passwordHasher.VerifyHashedPassword(user ?? new User(), hashToVerify, request.Password);
+
+        var verification = passwordHasher.VerifyHashedPassword(
+            user ?? new User(),
+            hashToVerify,
+            request.Password);
+
         if (user is null || verification == PasswordVerificationResult.Failed)
-            return Unauthorized(new ProblemDetails { Title = "The username/email or password is incorrect." });
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "The username/email or password is incorrect."
+            });
 
         if (verification == PasswordVerificationResult.SuccessRehashNeeded)
-        {
             user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
-        }
+
         user.LastLoginAt = DateTime.UtcNow;
         await context.SaveChangesAsync(cancellationToken);
 
@@ -104,20 +129,144 @@ public sealed partial class AuthController(
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.Username),
         };
+
         if (adminEmailAllowlist.IsAllowed(user))
             claims.Add(new Claim(ClaimTypes.Role, "Admin"));
 
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
+            new ClaimsPrincipal(new ClaimsIdentity(
+                claims,
+                CookieAuthenticationDefaults.AuthenticationScheme)),
             new AuthenticationProperties
             {
                 IsPersistent = request.RememberMe,
-                ExpiresUtc = DateTimeOffset.UtcNow.Add(request.RememberMe ? TimeSpan.FromDays(30) : TimeSpan.FromHours(12)),
+                ExpiresUtc = DateTimeOffset.UtcNow.Add(
+                    request.RememberMe
+                        ? TimeSpan.FromDays(30)
+                        : TimeSpan.FromHours(12)),
                 AllowRefresh = true,
             });
 
         return Ok(new { user = PublicUser(user) });
+    }
+
+    [HttpPost("forgot-password")]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> ForgotPassword(
+        [FromBody] ForgotPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        const string responseMessage =
+            "If an account with that email exists, a password reset link will be sent.";
+
+        var email = request.Email.Trim().ToLowerInvariant();
+
+        var user = await context.Users.FirstOrDefaultAsync(
+            candidate => candidate.Email == email,
+            cancellationToken);
+
+        if (user is null)
+            return Ok(new { message = responseMessage });
+
+        var resetUrl = configuration["Frontend:PasswordResetUrl"];
+
+        if (string.IsNullOrWhiteSpace(resetUrl))
+            throw new InvalidOperationException("Password reset URL is not configured.");
+
+        var existingTokens = await context.PasswordResetTokens
+            .Where(token => token.UserId == user.Id)
+            .ToListAsync(cancellationToken);
+
+        context.PasswordResetTokens.RemoveRange(existingTokens);
+
+        var rawToken = Convert.ToHexString(
+            RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
+
+        var tokenHash = Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes(rawToken))).ToLowerInvariant();
+
+        var resetToken = new PasswordResetToken
+        {
+            UserId = user.Id,
+            TokenHash = tokenHash,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(30),
+        };
+
+        context.PasswordResetTokens.Add(resetToken);
+        await context.SaveChangesAsync(cancellationToken);
+
+        var resetLink = $"{resetUrl}?token={Uri.EscapeDataString(rawToken)}";
+
+        try
+        {
+            await emailService.SendPasswordResetEmailAsync(
+                user.Email,
+                resetLink,
+                cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            context.PasswordResetTokens.Remove(resetToken);
+            await context.SaveChangesAsync(CancellationToken.None);
+
+            logger.LogError(exception, "Password reset email delivery failed.");
+        }
+
+        return Ok(new { message = responseMessage });
+    }
+
+    [HttpPost("reset-password")]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> ResetPassword(
+        [FromBody] ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!PasswordIsStrong(request.NewPassword))
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Password must be at least 10 characters and include an uppercase letter, a lowercase letter, and a number.",
+            });
+
+        await using var transaction =
+            await context.Database.BeginTransactionAsync(cancellationToken);
+
+        var tokenHash = Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes(request.Token))).ToLowerInvariant();
+
+        var resetToken = await context.PasswordResetTokens
+            .Include(token => token.User)
+            .FirstOrDefaultAsync(
+                token => token.TokenHash == tokenHash &&
+                        token.ExpiresAt > DateTime.UtcNow,
+                cancellationToken);
+
+        if (resetToken is null)
+            return BadRequest(new ProblemDetails
+            {
+                Title = "This password reset link is invalid or has expired."
+            });
+
+        var user = resetToken.User;
+
+        user.PasswordHash = passwordHasher.HashPassword(
+            user,
+            request.NewPassword);
+
+        var userTokens = await context.PasswordResetTokens
+            .Where(token => token.UserId == user.Id)
+            .ToListAsync(cancellationToken);
+
+        context.PasswordResetTokens.RemoveRange(userTokens);
+
+        await context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return Ok(new
+        {
+            message = "Your password has been reset successfully. You can now sign in."
+        });
     }
 
     [HttpPost("logout")]
@@ -125,16 +274,23 @@ public sealed partial class AuthController(
     public async Task<IActionResult> Logout()
     {
         var origins = Request.Headers.Origin;
+
         var trustedRequest = origins.Count > 0
-            ? origins.Count == 1 && FrontendOriginValidator.IsTrustedOrigin(origins[0], configuration)
+            ? origins.Count == 1 &&
+              FrontendOriginValidator.IsTrustedOrigin(origins[0], configuration)
             : Request.Headers.Referer.Count == 1 &&
-              FrontendOriginValidator.IsTrustedReferer(Request.Headers.Referer[0], configuration);
+              FrontendOriginValidator.IsTrustedReferer(
+                  Request.Headers.Referer[0],
+                  configuration);
+
         if (!trustedRequest)
             return Problem(
                 title: "Logout requests must come from a trusted frontend origin.",
                 statusCode: StatusCodes.Status403Forbidden);
 
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignOutAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme);
+
         return NoContent();
     }
 
@@ -143,14 +299,22 @@ public sealed partial class AuthController(
     public async Task<IActionResult> Me(CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!int.TryParse(userId, out var id)) return Unauthorized();
+
+        if (!int.TryParse(userId, out var id))
+            return Unauthorized();
+
         var user = await context.Users.AsNoTracking().SingleOrDefaultAsync(
-            candidate => candidate.Id == id, cancellationToken);
+            candidate => candidate.Id == id,
+            cancellationToken);
+
         if (user is null)
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
             return Unauthorized();
         }
+
         return Ok(new { user = PublicUser(user) });
     }
 
@@ -171,7 +335,10 @@ public sealed partial class AuthController(
     private static string CreateDummyPasswordHash()
     {
         var hasher = new PasswordHasher<User>();
-        return hasher.HashPassword(new User(), Convert.ToHexString(Guid.NewGuid().ToByteArray()));
+
+        return hasher.HashPassword(
+            new User(),
+            Convert.ToHexString(Guid.NewGuid().ToByteArray()));
     }
 
     [GeneratedRegex(@"^[\p{L}\p{N}._-]{3,50}$", RegexOptions.CultureInvariant)]
@@ -199,4 +366,19 @@ public sealed class LoginRequest
     public string Password { get; set; } = string.Empty;
 
     public bool RememberMe { get; set; }
+}
+
+public sealed class ForgotPasswordRequest
+{
+    [Required, EmailAddress, StringLength(255)]
+    public string Email { get; set; } = string.Empty;
+}
+
+public sealed class ResetPasswordRequest
+{
+    [Required, StringLength(64, MinimumLength = 64)]
+    public string Token { get; set; } = string.Empty;
+
+    [Required, StringLength(128, MinimumLength = 10)]
+    public string NewPassword { get; set; } = string.Empty;
 }

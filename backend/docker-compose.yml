@@ -33,6 +33,14 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__Mysql: "server=mysql;port=3306;database=${MYSQL_DATABASE:-vawe};user=${MYSQL_USER};password=${MYSQL_PASSWORD}"
       Upload__ApiKey: ${UPLOAD_API_KEY:?Set UPLOAD_API_KEY in backend/.env}
+      Email__SmtpHost: smtppro.zoho.eu
+      Email__SmtpPort: 587
+      Email__Username: fxadamg@vawes.app
+      Email__Password: ${ZOHO_SMTP_PASSWORD:?Set ZOHO_SMTP_PASSWORD in backend/.env}
+      Email__FromAddress: fxadamg@vawes.app
+      Email__FromName: VAWES
+      Email__UseStartTls: "true"
+      Frontend__PasswordResetUrl: https://vawes.app/reset-password
       MusicStorage__Directory: /var/lib/vawes/songs
       DataProtection__KeysPath: /var/lib/vawes/keys
     ports:
