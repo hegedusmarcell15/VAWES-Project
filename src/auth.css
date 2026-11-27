@@ -119,5 +119,43 @@
 .admin-artist label{display:grid;gap:.35rem;color:var(--text-dim);font-size:.74rem}
 .admin-artist input,.admin-artist textarea{width:100%;padding:.6rem .7rem;color:#fff;border:1px solid var(--glass-border);border-radius:9px;background:rgba(9,8,25,.55);font:inherit;font-size:.8rem;resize:vertical}
 .admin-artist button{justify-self:start;padding:.55rem .9rem;font-size:.78rem}
-@media(max-width:520px){.auth-page{padding:5.5rem 1rem 2rem}.auth-header{top:1.1rem}.admin-grid{grid-template-columns:1fr}}
+.auth-feedback-group{display:grid;gap:.4rem}
+.auth-feedback-hint{margin:0;color:var(--text-dim);font-size:.75rem;line-height:1.45}
+.admin-console{width:min(1180px,100%);max-width:none}
+.admin-console h1{font-size:clamp(1.7rem,4vw,2.4rem)}
+.admin-tabs{display:flex;gap:.45rem;margin-top:1.5rem;padding:.35rem;overflow-x:auto;border:1px solid var(--glass-border);border-radius:14px;background:rgba(9,8,25,.35)}
+.admin-tabs button{display:inline-flex;align-items:center;gap:.45rem;flex:0 0 auto;padding:.6rem .8rem;color:var(--text-dim);border:0;border-radius:10px;background:transparent;cursor:pointer;font:inherit;font-size:.78rem;white-space:nowrap}
+.admin-tabs button:hover{color:#fff;background:rgba(255,255,255,.06)}
+.admin-tabs button.is-active{color:#fff;background:linear-gradient(120deg,rgba(124,92,255,.55),rgba(45,212,255,.35))}
+.admin-toolbar{display:flex;align-items:center;gap:.65rem;margin-top:1rem}
+.admin-toolbar-end{justify-content:flex-end}
+.admin-toolbar label{display:flex;align-items:center;gap:.5rem;flex:1;padding:.55rem .7rem;border:1px solid var(--glass-border);border-radius:11px;background:rgba(9,8,25,.45);color:var(--text-dim)}
+.admin-toolbar input{min-width:0;width:100%;color:#fff;border:0;background:transparent;outline:0;font:inherit;font-size:.82rem}
+.admin-button{padding:.6rem .85rem;color:#fff;border:1px solid var(--glass-border);border-radius:10px;background:rgba(255,255,255,.06);cursor:pointer;font:inherit;font-size:.78rem}
+.admin-button:disabled{opacity:.55;cursor:wait}
+.admin-button:hover:not(:disabled){background:rgba(255,255,255,.12)}
+.admin-stats-wide{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-top:1rem}
+.admin-table{min-width:660px}
+.admin-table td.admin-editor-cell{padding:0;background:rgba(0,0,0,.15)}
+.admin-cell-clamp{max-width:280px}
+.admin-badge{display:inline-flex;align-items:center;padding:.2rem .5rem;border-radius:999px;font-size:.7rem;font-weight:700}
+.admin-badge.is-ok{color:#d7ffec;background:rgba(95,211,95,.16)}
+.admin-badge.is-warn{color:#ffd2d4;background:rgba(229,72,77,.16)}
+.admin-actions{display:flex;flex-wrap:wrap;gap:.35rem}
+.admin-actions button{padding:.35rem .55rem;color:var(--text-dim);border:1px solid var(--glass-border);border-radius:8px;background:transparent;cursor:pointer;font:inherit;font-size:.72rem}
+.admin-actions button:hover:not(:disabled){color:#fff;background:rgba(255,255,255,.08)}
+.admin-actions button:disabled{opacity:.5;cursor:wait}
+.admin-inline-editor{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.65rem;padding:.85rem}
+.admin-inline-editor label{display:grid;gap:.3rem;color:var(--text-dim);font-size:.72rem}
+.admin-inline-editor input{min-width:0;width:100%;padding:.55rem .65rem;color:#fff;border:1px solid var(--glass-border);border-radius:9px;background:rgba(9,8,25,.55);font:inherit;font-size:.78rem}
+.admin-inline-actions{display:flex;align-items:end;gap:.5rem}
+.admin-inline-actions .auth-submit{padding:.55rem .8rem;font-size:.75rem}
+.admin-reset-link{display:grid;gap:.35rem;padding:.85rem;overflow-wrap:anywhere;font-size:.74rem}
+.admin-reset-link a{color:var(--cyan)}
+.admin-pager{display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:1rem;color:var(--text-dim);font-size:.78rem}
+.admin-pager button{padding:.45rem .7rem;color:#fff;border:1px solid var(--glass-border);border-radius:9px;background:rgba(255,255,255,.05);cursor:pointer;font:inherit;font-size:.75rem}
+.admin-pager button:disabled{opacity:.45;cursor:not-allowed}
+.admin-upload-frame{padding:0;overflow:hidden}
+.admin-upload-frame iframe{display:block;width:100%;min-height:720px;border:0;background:transparent}
+@media(max-width:520px){.auth-page{padding:5.5rem 1rem 2rem}.auth-header{top:1.1rem}.admin-grid{grid-template-columns:1fr}.admin-toolbar{flex-wrap:wrap}.admin-upload-frame iframe{min-height:620px}}
 @media(prefers-reduced-motion:reduce){.auth-page *{scroll-behavior:auto;transition:none}}

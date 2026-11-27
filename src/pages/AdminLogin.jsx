@@ -87,7 +87,14 @@ export default function AdminLogin() {
             </span>
           </label>
 
-          {error && <p className="auth-feedback is-error" role="alert">{error}</p>}
+          {error && (
+            <div className="auth-feedback-group" role="alert">
+              <p className="auth-feedback is-error">{error}</p>
+              {error === t('adminAccessDenied') && (
+                <p className="auth-feedback-hint">{t('adminAccessDeniedHint')}</p>
+              )}
+            </div>
+          )}
           <button className="auth-submit" type="submit" disabled={busy}>
             {busy ? t('adminSigningIn') : t('adminLoginButton')}
           </button>

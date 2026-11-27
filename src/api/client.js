@@ -1,6 +1,5 @@
-import snapshot from '../../public/catalog.snapshot.json'
-
 export const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
+export const emptyCatalog = { artists: [], albums: [], songs: [], playlists: [] }
 const pageSize = 100
 
 export class ApiError extends Error {
@@ -141,7 +140,13 @@ async function getAll(resource, signal) {
 }
 
 export async function loadCatalog(signal) {
-  if (!apiBaseUrl) return { catalog: snapshot, source: 'snapshot', error: null }
+  if (!apiBaseUrl) {
+    return {
+      catalog: emptyCatalog,
+      source: 'empty',
+      error: new ApiError('VITE_API_BASE_URL is not configured'),
+    }
+  }
 
   try {
     const [artists, albums, songs, playlists] = await Promise.all([
@@ -150,9 +155,20 @@ export async function loadCatalog(signal) {
       getAll('songs', signal),
       getAll('playlists', signal),
     ])
-    return { catalog: { artists, albums, songs, playlists }, source: 'api', error: null }
+    // A track without an audio source is a database record, not playable music.
+    // Keep it out of the catalog so deleted or placeholder entries cannot resurface.
+    const playableSongs = songs.filter((song) => Boolean(audioUrlForSong(song)))
+    const artistIds = new Set(playableSongs.map((song) => String(song.artist_id ?? '')))
+    const albumIds = new Set(playableSongs.map((song) => String(song.album_id ?? '')))
+    const catalog = {
+      artists: artists.filter((artist) => artistIds.has(String(artist.id))),
+      albums: albums.filter((album) => albumIds.has(String(album.id))),
+      songs: playableSongs,
+      playlists,
+    }
+    return { catalog, source: 'api', error: null }
   } catch (error) {
     if (signal?.aborted) throw error
-    return { catalog: snapshot, source: 'snapshot', error }
+    return { catalog: emptyCatalog, source: 'empty', error }
   }
 }

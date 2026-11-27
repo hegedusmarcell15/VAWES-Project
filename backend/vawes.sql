@@ -136,6 +136,21 @@ CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
+-- Tábla szerkezet ehhez a táblához `admin_audit_log`
+--
+
+CREATE TABLE IF NOT EXISTS `admin_audit_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `actor_email` varchar(255) NOT NULL,
+  `action` varchar(100) NOT NULL,
+  `target` varchar(200) NOT NULL,
+  `detail` varchar(500) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
 -- Indexek a kiírt táblákhoz
 --
 

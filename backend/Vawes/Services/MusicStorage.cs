@@ -14,6 +14,8 @@ public sealed class MusicStorage
                 : Path.Combine(environment.ContentRootPath, configuredPath));
     }
 
+    public string RootPath => rootPath;
+
     public string CreateUploadPath()
     {
         var uploadsDirectory = Path.Combine(rootPath, "uploads");

@@ -136,12 +136,6 @@ if (!string.IsNullOrWhiteSpace(dataProtectionPath))
     	return;
 	}
 
-if (args.Contains("--seed-catalog", StringComparer.Ordinal))
-{
-    await using var scope = app.Services.CreateAsyncScope();
-    await Vawes.Services.CatalogSeeder.SeedAsync(scope.ServiceProvider);
-    return;
-}
             app.UseHttpsRedirection();
 
             app.UseCors("Frontend");

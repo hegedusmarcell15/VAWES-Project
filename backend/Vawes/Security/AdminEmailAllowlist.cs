@@ -10,6 +10,8 @@ public sealed class AdminEmailAllowlist(IConfiguration configuration)
         .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+    public int AllowedEmailCount => allowedEmails.Count;
+
     public bool IsAllowed(User? user) =>
         user is { IsAdmin: true } && !string.IsNullOrWhiteSpace(user.Email) &&
         allowedEmails.Contains(user.Email.Trim());

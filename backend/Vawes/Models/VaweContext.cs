@@ -19,6 +19,7 @@ public partial class VaweContext : DbContext
     public virtual DbSet<Song> Songs { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+    public virtual DbSet<AdminAuditEntry> AdminAuditLog { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -177,6 +178,19 @@ public partial class VaweContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AdminAuditEntry>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+            entity.ToTable("admin_audit_log");
+
+            entity.Property(e => e.Id).HasColumnType("int(11)").HasColumnName("id");
+            entity.Property(e => e.ActorEmail).HasMaxLength(255).HasColumnName("actor_email");
+            entity.Property(e => e.Action).HasMaxLength(100).HasColumnName("action");
+            entity.Property(e => e.Target).HasMaxLength(200).HasColumnName("target");
+            entity.Property(e => e.Detail).HasMaxLength(500).HasColumnName("detail");
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime").HasColumnName("created_at");
         });
 
         OnModelCreatingPartial(modelBuilder);

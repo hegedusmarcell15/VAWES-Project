@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Vawes.DTOs;
 using Vawes.Models;
-using Vawes.Services;
 
 namespace Vawes.Tests;
 
@@ -94,64 +93,20 @@ public sealed class MusicUploadTests
     }
 
     [Fact]
-    public async Task Seed_ReusesLegacySluglessRecordsAndPreservesAudioAndUnrelatedSongs()
+    public async Task Upload_RejectsDuplicateMetadata()
     {
         using var factory = new VawesApplicationFactory();
-        var seed = await ReadCatalogSeed();
-        var seedArtist = seed.Artists.First();
-        var seedAlbum = seed.Albums.First(album => album.ArtistId == seedArtist.Id);
-        var seedSong = seed.Songs.First(song =>
-            song.ArtistId == seedArtist.Id && song.AlbumId == seedAlbum.Id);
-        int legacySongId;
-        int unrelatedSongId;
-        using (var scope = factory.Services.CreateScope())
-        {
-            var context = scope.ServiceProvider.GetRequiredService<VaweContext>();
-            var artist = new Artist { Name = seedArtist.Name, CreatedAt = DateTime.UtcNow };
-            var album = new Album { Title = seedAlbum.Title, Artist = artist, CreatedAt = DateTime.UtcNow };
-            var song = new Song
-            {
-                Title = seedSong.Title,
-                Artist = artist,
-                Album = album,
-                DurationSec = 42,
-                FilePath = "uploads/pre-existing-audio.mp3",
-                UploadedAt = DateTime.UtcNow,
-            };
-            var unrelatedArtist = new Artist { Name = "Unrelated existing artist", CreatedAt = DateTime.UtcNow };
-            var unrelatedAlbum = new Album { Title = "Unrelated album", Artist = unrelatedArtist, CreatedAt = DateTime.UtcNow };
-            var unrelatedSong = new Song
-            {
-                Title = "Unrelated existing track",
-                Artist = unrelatedArtist,
-                Album = unrelatedAlbum,
-                FilePath = "uploads/unrelated.mp3",
-                UploadedAt = DateTime.UtcNow,
-            };
-            context.AddRange(artist, album, song, unrelatedArtist, unrelatedAlbum, unrelatedSong);
-            await context.SaveChangesAsync();
+        using var client = factory.CreateClient();
+        await SignInAsAdmin(factory, client);
+        client.DefaultRequestHeaders.Add("X-VAWES-API-Key", VawesApplicationFactory.AdminKey);
 
-            legacySongId = song.Id;
-            unrelatedSongId = unrelatedSong.Id;
-        }
+        using var first = CreateUploadRequest(CreateMp3Frames(), "first.mp3");
+        Assert.Equal(HttpStatusCode.Created, (await client.PostAsync("/api/songs", first)).StatusCode);
 
-        using (var seedScope = factory.Services.CreateScope())
-            await CatalogSeeder.SeedAsync(seedScope.ServiceProvider);
+        using var duplicate = CreateUploadRequest(CreateMp3Frames(), "duplicate.mp3");
+        var response = await client.PostAsync("/api/songs", duplicate);
 
-        using (var verifyScope = factory.Services.CreateScope())
-        {
-            var context = verifyScope.ServiceProvider.GetRequiredService<VaweContext>();
-            var savedSong = await context.Songs.FindAsync(legacySongId);
-            Assert.NotNull(savedSong);
-            Assert.Equal("uploads/pre-existing-audio.mp3", savedSong.FilePath);
-            Assert.Equal(seedSong.Id, savedSong.Slug);
-            Assert.NotNull(await context.Songs.FindAsync(unrelatedSongId));
-            Assert.Equal(1, await context.Artists.CountAsync(item => item.Name == seedArtist.Name));
-            Assert.Equal(1, await context.Albums.CountAsync(item =>
-                item.Title == seedAlbum.Title && item.ArtistId == savedSong.ArtistId));
-            Assert.Equal(1, await context.Songs.CountAsync(item =>
-                item.Title == seedSong.Title && item.ArtistId == savedSong.ArtistId && item.AlbumId == savedSong.AlbumId));
-        }
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
     private static MultipartFormDataContent CreateUploadRequest(byte[] audioBytes, string fileName)
@@ -209,15 +164,5 @@ public sealed class MusicUploadTests
             bytes[offset + 3] = 0x64;
         }
         return bytes;
-    }
-
-    private static async Task<CatalogSeeder.CatalogSeed> ReadCatalogSeed()
-    {
-        var path = Path.Combine(AppContext.BaseDirectory, "catalog.snapshot.json");
-        var json = await File.ReadAllTextAsync(path);
-        return System.Text.Json.JsonSerializer.Deserialize<CatalogSeeder.CatalogSeed>(
-                   json,
-                   new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-               ?? throw new InvalidDataException("Test catalog snapshot is missing.");
     }
 }

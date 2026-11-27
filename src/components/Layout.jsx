@@ -6,6 +6,7 @@ import { useCatalog } from '../CatalogContext.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
 import Icon from './Icon.jsx'
 import { useAuth } from '../AuthContext.jsx'
+import { isAllowedAdmin } from '../adminAccess.js'
 
 export default function Layout() {
   const { catalog, status, error } = useCatalog()
@@ -151,6 +152,7 @@ export default function Layout() {
             <NavLink to="/kereses">{t('search')}</NavLink>
             <NavLink to="/konyvtar">{t('library')}</NavLink>
             <NavLink to="/kedvencek">{t('favorites')}</NavLink>
+            {user && isAllowedAdmin(user) && <NavLink to="/admin">{t('adminPortalLink')}</NavLink>}
           </nav>
           <p className="label">{t('playlists')}</p>
           {catalog.playlists.slice(0, 4).map((p) => (

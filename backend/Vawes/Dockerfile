@@ -2,7 +2,6 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY backend/Vawes/Vawes.csproj backend/Vawes/
-COPY public/catalog.snapshot.json public/catalog.snapshot.json
 RUN dotnet restore backend/Vawes/Vawes.csproj
 
 COPY backend/Vawes/ backend/Vawes/

@@ -9,7 +9,8 @@ VAWES is a music catalog and player built with a React/Vite frontend and an ASP.
 - `backend/Vawes/` — ASP.NET Core API
 - `backend/Vawes.Tests/` — API integration tests
 - `backend/*.sql` — database baseline and additive migrations
-- `public/catalog.snapshot.json` — offline fallback catalog used when the API is unavailable
+
+The catalog starts empty. Music enters it only through the administrator upload flow, which stores the audio file and its metadata together.
 
 ## Prerequisites
 
@@ -25,7 +26,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Set `VITE_API_BASE_URL` in `.env.local` to the API base URL, including `/api`. If it is omitted, the app falls back to `public/catalog.snapshot.json` and authentication will not work.
+Set `VITE_API_BASE_URL` in `.env.local` to the API base URL, including `/api`. Without it the app shows an empty catalog and authentication is unavailable.
 
 `VITE_BASE_PATH` is only needed for deployments under a subpath, such as a GitHub Pages project site.
 
@@ -63,17 +64,13 @@ mysql ... vawe < backend/playlist-order-schema.sql
 mysql ... vawe < backend/password-reset-schema.sql
 ```
 
-Seed the catalog from the bundled snapshot:
-
-```bash
-docker compose -f backend/docker-compose.yml exec api dotnet Vawes.dll --seed-catalog
-```
+For databases created before the admin audit log, apply `backend/admin-audit-schema.sql`. Do not seed demo music — every catalog entry must have a real audio file.
 
 ## Administrator access
 
-Administrator status requires both the `is_admin` database flag and an email listed in `Admin:AllowedEmails`. Sign in at `/admin/login` to reach the admin console, which provides user and artist management.
+Administrator status requires both the `is_admin` database flag and an email listed in `Admin:AllowedEmails`. Sign in at `/admin/login` to reach the console at `/admin`, which provides an overview, catalog, artist, user, playlist, upload, audit and status tabs. Links are shareable via `?tab=...`.
 
-Music upload lives at `/upload.html`. It requires an administrator session cookie and the `Upload:ApiKey` value from the environment.
+Upload requires an administrator session cookie and the `Upload:ApiKey` value. It is available inside the console and at the standalone `/upload.html` page.
 
 ## API documentation
 

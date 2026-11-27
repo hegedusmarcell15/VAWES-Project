@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import snapshot from '../public/catalog.snapshot.json'
-import { apiGet, loadCatalog } from './api/client.js'
+import { apiGet, emptyCatalog, loadCatalog } from './api/client.js'
 import { useAuth } from './AuthContext.jsx'
 
 const CatalogContext = createContext(null)
@@ -8,9 +7,9 @@ const CatalogContext = createContext(null)
 export function CatalogProvider({ children }) {
   const { user, status: authStatus } = useAuth()
   const [state, setState] = useState({
-    catalog: snapshot,
+    catalog: emptyCatalog,
     status: 'loading',
-    source: 'snapshot',
+    source: 'empty',
     error: null,
   })
   const [favorites, setFavorites] = useState([])
@@ -32,7 +31,7 @@ export function CatalogProvider({ children }) {
       setState({ ...result, status: 'ready' })
     }).catch((error) => {
       if (!controller.signal.aborted) {
-        setState({ catalog: snapshot, status: 'ready', source: 'snapshot', error })
+        setState({ catalog: emptyCatalog, status: 'ready', source: 'empty', error })
       }
     })
     return () => controller.abort()
