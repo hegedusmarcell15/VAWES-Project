@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiGet, apiList } from '../api/client.js'
 import { fmt } from '../catalogUtils.js'
@@ -89,65 +89,68 @@ export default function AdminDashboard() {
     setPage(1)
   }, [tab])
 
-  const load = useCallback(async () => {
+  useEffect(() => {
     let active = true
-    setLoading(true)
-    setError('')
-    try {
-      let result
-      const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) })
-      if (search.trim()) query.set('search', search.trim())
 
-      switch (tab) {
-        case 'overview':
-          result = await apiGet('admin/summary')
-          break
-        case 'status':
-          result = await apiGet('admin/health')
-          break
-        case 'catalog':
-          result = await apiGet(`admin/songs?${query}`)
-          break
-        case 'albums':
-          result = await apiGet(`admin/albums?${query}`)
-          break
-        case 'playlists':
-          result = await apiGet(`admin/playlists?${query}`)
-          break
-        case 'audit':
-          result = await apiGet(`admin/audit?${query}`)
-          break
-        case 'artists': {
-          const artists = await apiList('artists', { search, size: 100 })
-          result = { items: artists, total: artists.length }
-          break
+    const load = async () => {
+      setLoading(true)
+      setError('')
+      try {
+        let result
+        const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) })
+        if (search.trim()) query.set('search', search.trim())
+
+        switch (tab) {
+          case 'overview':
+            result = await apiGet('admin/summary')
+            break
+          case 'status':
+            result = await apiGet('admin/health')
+            break
+          case 'catalog':
+            result = await apiGet(`admin/songs?${query}`)
+            break
+          case 'albums':
+            result = await apiGet(`admin/albums?${query}`)
+            break
+          case 'playlists':
+            result = await apiGet(`admin/playlists?${query}`)
+            break
+          case 'audit':
+            result = await apiGet(`admin/audit?${query}`)
+            break
+          case 'artists': {
+            const artists = await apiList('artists', { search, size: 100 })
+            result = { items: artists, total: artists.length }
+            break
+          }
+          case 'users': {
+            const users = await apiGet('admin/users')
+            const term = search.trim().toLowerCase()
+            const items = term
+              ? users.filter((item) =>
+                  `${item.username} ${item.email}`.toLowerCase().includes(term))
+              : users
+            result = { items, total: items.length }
+            break
+          }
+          default:
+            result = null
         }
-        case 'users': {
-          const users = await apiGet('admin/users')
-          const term = search.trim().toLowerCase()
-          const items = term
-            ? users.filter((item) =>
-                `${item.username} ${item.email}`.toLowerCase().includes(term))
-            : users
-          result = { items, total: items.length }
-          break
+        if (active) setData(result)
+      } catch (loadError) {
+        if (active) {
+          setData(null)
+          setError(loadError.message)
         }
-        default:
-          result = null
+      } finally {
+        if (active) setLoading(false)
       }
-      if (active) setData(result)
-    } catch (loadError) {
-      if (active) {
-        setData(null)
-        setError(loadError.message)
-      }
-    } finally {
-      if (active) setLoading(false)
     }
+
+    load()
     return () => { active = false }
   }, [tab, search, page, refreshKey])
-
-  useEffect(() => load(), [load])
 
   const handleLogout = async () => {
     setBusy(true)
