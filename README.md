@@ -1,1 +1,90 @@
+# VAWES
 
+VAWES is a music catalog and player built with a React/Vite frontend and an ASP.NET Core 10 API backed by MySQL.
+
+## Contents
+
+- `src/` — React application, contexts, pages and components
+- `upload.html` — standalone administrator upload page
+- `backend/Vawes/` — ASP.NET Core API
+- `backend/Vawes.Tests/` — API integration tests
+- `backend/*.sql` — database baseline and additive migrations
+- `public/catalog.snapshot.json` — offline fallback catalog used when the API is unavailable
+
+## Prerequisites
+
+- Node.js 20+
+- .NET SDK 10+
+- Docker with Compose, or a local MySQL 8.4 instance
+
+## Frontend setup
+
+```bash
+npm ci
+cp .env.example .env.local
+npm run dev
+```
+
+Set `VITE_API_BASE_URL` in `.env.local` to the API base URL, including `/api`. If it is omitted, the app falls back to `public/catalog.snapshot.json` and authentication will not work.
+
+`VITE_BASE_PATH` is only needed for deployments under a subpath, such as a GitHub Pages project site.
+
+## Backend setup
+
+1. Copy the environment template and fill in the values:
+
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
+
+   `DATAPROTECTION_CERTIFICATE_PASSWORD` must match the password of `backend/secrets/dataprotection.pfx`. That certificate is intentionally gitignored and must be provisioned separately.
+
+2. Start the stack:
+
+   ```bash
+   docker compose -f backend/docker-compose.yml up --build
+   ```
+
+   The API listens on `http://localhost:5121` and MySQL on `127.0.0.1:3307`.
+
+### Database schema
+
+For a new database, import the canonical baseline:
+
+```bash
+mysql -h 127.0.0.1 -P 3307 -u vawe -p vawe < backend/vawes.sql
+```
+
+The baseline already includes slugs, playlist positions and password-reset tokens. For databases created before those features, apply the additive migrations in this order:
+
+```bash
+mysql ... vawe < backend/catalog-schema.sql
+mysql ... vawe < backend/playlist-order-schema.sql
+mysql ... vawe < backend/password-reset-schema.sql
+```
+
+Seed the catalog from the bundled snapshot:
+
+```bash
+docker compose -f backend/docker-compose.yml exec api dotnet Vawes.dll --seed-catalog
+```
+
+## Administrator access
+
+Administrator status requires both the `is_admin` database flag and an email listed in `Admin:AllowedEmails`. Sign in at `/admin/login` to reach the admin console, which provides user and artist management.
+
+Music upload lives at `/upload.html`. It requires an administrator session cookie and the `Upload:ApiKey` value from the environment.
+
+## Tests
+
+```bash
+npm test
+npm run build
+dotnet test backend/Vawes.Tests/Vawes.Tests.csproj
+```
+
+CI runs all three before deploying the static frontend to GitHub Pages.
+
+## Deployment
+
+`.github/workflows/static.yml` builds the frontend with `VITE_BASE_PATH` and `VITE_API_BASE_URL` repository variables, copies `dist/index.html` to `dist/404.html` for SPA route fallback, and publishes `dist/` to GitHub Pages. The API is deployed separately with `backend/docker-compose.yml`.

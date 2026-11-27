@@ -51,12 +51,17 @@ public sealed class EmailService(IConfiguration configuration)
                 """
         };
 
+        var useStartTls = configuration.GetValue<bool?>("Email:UseStartTls") ?? true;
+        var socketOptions = useStartTls
+            ? SecureSocketOptions.StartTls
+            : SecureSocketOptions.Auto;
+
         using var client = new SmtpClient();
 
         await client.ConnectAsync(
             smtpHost,
             smtpPort,
-            SecureSocketOptions.StartTls,
+            socketOptions,
             cancellationToken);
 
         await client.AuthenticateAsync(

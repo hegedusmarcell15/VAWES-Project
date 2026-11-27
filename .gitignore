@@ -7,3 +7,6 @@ dist/
 /backend/storage/
 # VAWES private certificates and secrets
 /backend/secrets/
+
+# Local database snapshots may contain user data and password hashes
+/backups/
