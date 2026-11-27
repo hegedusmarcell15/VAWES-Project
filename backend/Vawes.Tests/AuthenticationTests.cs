@@ -140,17 +140,17 @@ public sealed class AuthenticationTests
         Assert.True(allowedLogin.GetProperty("user").GetProperty("isAdmin").GetBoolean());
         var currentUser = await allowedAdmin.GetFromJsonAsync<JsonElement>("/api/auth/me");
         Assert.True(currentUser.GetProperty("user").GetProperty("isAdmin").GetBoolean());
-        Assert.Equal(HttpStatusCode.OK, (await allowedAdmin.GetAsync("/users/AllUser")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await allowedAdmin.GetAsync("/api/admin/users")).StatusCode);
 
         var unlistedLogin = await SignInAndGetUser(unlistedAdmin, "unlistedadmin", "StrongPass123");
         Assert.False(unlistedLogin.GetProperty("user").GetProperty("isAdmin").GetBoolean());
         var unlistedCurrentUser = await unlistedAdmin.GetFromJsonAsync<JsonElement>("/api/auth/me");
         Assert.False(unlistedCurrentUser.GetProperty("user").GetProperty("isAdmin").GetBoolean());
-        Assert.Equal(HttpStatusCode.Forbidden, (await unlistedAdmin.GetAsync("/users/AllUser")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await unlistedAdmin.GetAsync("/api/admin/users")).StatusCode);
 
         var listedLogin = await SignInAndGetUser(listedNonAdmin, "listeduser", "StrongPass123");
         Assert.False(listedLogin.GetProperty("user").GetProperty("isAdmin").GetBoolean());
-        Assert.Equal(HttpStatusCode.Forbidden, (await listedNonAdmin.GetAsync("/users/AllUser")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await listedNonAdmin.GetAsync("/api/admin/users")).StatusCode);
 
         using (var scope = factory.Services.CreateScope())
         {
@@ -160,7 +160,7 @@ public sealed class AuthenticationTests
             await context.SaveChangesAsync();
         }
 
-        Assert.Equal(HttpStatusCode.Forbidden, (await allowedAdmin.GetAsync("/users/AllUser")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await allowedAdmin.GetAsync("/api/admin/users")).StatusCode);
     }
 
     [Fact]

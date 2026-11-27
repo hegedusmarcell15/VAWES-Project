@@ -32,6 +32,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Test frontend
+        run: npm test
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test API
+        run: dotnet test backend/Vawes.Tests/Vawes.Tests.csproj --nologo
+
       - name: Build frontend
         env:
           VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH }}

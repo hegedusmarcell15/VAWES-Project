@@ -150,6 +150,8 @@ if (args.Contains("--seed-catalog", StringComparer.Ordinal))
             app.UseAuthorization();
 
             app.MapControllers();
+            app.MapOpenApi();
+            app.MapScalarApiReference();
 
             app.Run();
         }

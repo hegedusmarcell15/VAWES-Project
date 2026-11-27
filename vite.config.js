@@ -21,6 +21,12 @@ export default defineConfig({
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         upload: fileURLToPath(new URL('./upload.html', import.meta.url)),
       },
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom/client'],
+          router: ['react-router-dom'],
+        },
+      },
     },
   },
 })

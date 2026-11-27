@@ -1,28 +1,33 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { PlayerProvider } from './PlayerContext.jsx'
 import Layout from './components/Layout.jsx'
-import Home from './pages/Home.jsx'
-import Search from './pages/Search.jsx'
-import Library from './pages/Library.jsx'
-import Artist from './pages/Artist.jsx'
-import Album from './pages/Album.jsx'
-import Playlist from './pages/Playlist.jsx'
-import Favorites from './pages/Favorites.jsx'
 import { LanguageProvider } from './LanguageContext.jsx'
 import { CatalogProvider } from './CatalogContext.jsx'
-import { AuthProvider } from './AuthContext.jsx'
-import { useAuth } from './AuthContext.jsx'
+import { AuthProvider, useAuth } from './AuthContext.jsx'
 import { isAllowedAdmin } from './adminAccess.js'
-import AuthPage from './pages/AuthPage.jsx'
-import AdminLogin from './pages/AdminLogin.jsx'
-import AdminDashboard from './pages/AdminDashboard.jsx'
-import ForgotPassword from './pages/ForgotPassword.jsx'
-import ResetPassword from './pages/ResetPassword.jsx'
+
+const Home = lazy(() => import('./pages/Home.jsx'))
+const Search = lazy(() => import('./pages/Search.jsx'))
+const Library = lazy(() => import('./pages/Library.jsx'))
+const Artist = lazy(() => import('./pages/Artist.jsx'))
+const Album = lazy(() => import('./pages/Album.jsx'))
+const Playlist = lazy(() => import('./pages/Playlist.jsx'))
+const Favorites = lazy(() => import('./pages/Favorites.jsx'))
+const AuthPage = lazy(() => import('./pages/AuthPage.jsx'))
+const AdminLogin = lazy(() => import('./pages/AdminLogin.jsx'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard.jsx'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'))
+
+function RouteFallback() {
+  return <main className="auth-page" aria-busy="true" />
+}
 
 function RequireAuth() {
   const { user, status } = useAuth()
 
-  if (status === 'loading') return <main className="auth-page" aria-busy="true" />
+  if (status === 'loading') return <RouteFallback />
   if (!user) return <Navigate to="/login" replace />
   return <Outlet />
 }
@@ -30,7 +35,7 @@ function RequireAuth() {
 function RequireAdmin() {
   const { user, status } = useAuth()
 
-  if (status === 'loading') return <main className="auth-page" aria-busy="true" />
+  if (status === 'loading') return <RouteFallback />
   if (!user) return <Navigate to="/admin/login" replace />
   if (!isAllowedAdmin(user)) return <Navigate to="/" replace />
   return <Outlet />
@@ -42,27 +47,29 @@ export default function App() {
       <CatalogProvider>
         <LanguageProvider>
           <PlayerProvider>
-            <Routes>
-              <Route path="/login" element={<AuthPage />} />
-              <Route path="/register" element={<AuthPage />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route element={<RequireAdmin />}>
-                <Route path="/admin" element={<AdminDashboard />} />
-              </Route>
-              <Route element={<RequireAuth />}>
-                <Route element={<Layout />}>
-                  <Route index element={<Home />} />
-                  <Route path="lista/:id" element={<Playlist />} />
-                  <Route path="kereses" element={<Search />} />
-                  <Route path="konyvtar" element={<Library />} />
-                  <Route path="kedvencek" element={<Favorites />} />
-                  <Route path="eloado/:id" element={<Artist />} />
-                  <Route path="album/:id" element={<Album />} />
+            <Suspense fallback={<RouteFallback />}>
+              <Routes>
+                <Route path="/login" element={<AuthPage />} />
+                <Route path="/register" element={<AuthPage />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route element={<RequireAdmin />}>
+                  <Route path="/admin" element={<AdminDashboard />} />
                 </Route>
-              </Route>
-            </Routes>
+                <Route element={<RequireAuth />}>
+                  <Route element={<Layout />}>
+                    <Route index element={<Home />} />
+                    <Route path="lista/:id" element={<Playlist />} />
+                    <Route path="kereses" element={<Search />} />
+                    <Route path="konyvtar" element={<Library />} />
+                    <Route path="kedvencek" element={<Favorites />} />
+                    <Route path="eloado/:id" element={<Artist />} />
+                    <Route path="album/:id" element={<Album />} />
+                  </Route>
+                </Route>
+              </Routes>
+            </Suspense>
           </PlayerProvider>
         </LanguageProvider>
       </CatalogProvider>

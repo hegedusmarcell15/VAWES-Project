@@ -75,6 +75,10 @@ Administrator status requires both the `is_admin` database flag and an email lis
 
 Music upload lives at `/upload.html`. It requires an administrator session cookie and the `Upload:ApiKey` value from the environment.
 
+## API documentation
+
+With the API running, interactive documentation is available at `http://localhost:5121/scalar`. The raw OpenAPI document is served at `http://localhost:5121/openapi/v1.json`.
+
 ## Tests
 
 ```bash
