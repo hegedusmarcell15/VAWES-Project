@@ -101,24 +101,23 @@ body{margin:0; font-family:"Segoe UI",ui-sans-serif,-apple-system,BlinkMacSystem
   background:
     radial-gradient(120% 90% at 16% 0%,color-mix(in srgb,var(--accent-2) 15%,transparent),transparent 58%),
     radial-gradient(120% 95% at 94% 100%,color-mix(in srgb,var(--accent) 13%,transparent),transparent 62%);
-  filter:var(--glass-lens,none);
   opacity:.55;
 }
-/* Angle-weighted rim light, kept faint so it reads as glass, not chrome. */
+/* Rim light: a hairline gradient border that follows any panel size and radius. */
 .glass::after{
   content:"";
   position:absolute;
   inset:0;
   z-index:-1;
+  padding:1px;
   border-radius:inherit;
   pointer-events:none;
-  background-image:var(--glass-specular,none);
-  background-size:100% 100%;
-  background-repeat:no-repeat;
-  mix-blend-mode:screen;
-  opacity:.3;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--app-ink) 42%,transparent),transparent 30%,transparent 70%,color-mix(in srgb,var(--app-ink) 16%,transparent));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
+  opacity:.6;
 }
-.glass-defs{position:absolute; width:0; height:0; overflow:hidden; pointer-events:none}
 @keyframes glass-rise{from{opacity:0; transform:translateY(8px) scale(.99)}to{opacity:1; transform:translateY(0) scale(1)}}
 
 .main{position:relative; z-index:1; display:flex; gap:.9rem; flex:1; min-height:0}
@@ -320,7 +319,7 @@ tr.row{cursor:pointer}
 tr.row:hover td{background:rgba(255,255,255,.07)}
 tr.row td:first-child{border-radius:12px 0 0 12px}
 tr.row td:last-child{border-radius:0 12px 12px 0}
-tr.row.playing .t{color:var(--cyan)}
+tr.row.playing .t{color:color-mix(in srgb,var(--cyan) 55%,#fff); font-weight:600}
 .t-cell{display:flex; align-items:center; gap:.7rem}
 .result-artist{display:block; color:var(--text-dim); font-size:.72rem; margin-top:.15rem}
 mark{background:none; color:var(--pink); font-weight:bold}
@@ -341,7 +340,7 @@ mark{background:none; color:var(--pink); font-weight:bold}
 .search-box .clear:active{transform:translateY(-50%) scale(.86)}
 
 .chips,.tools{display:flex; align-items:center; flex-wrap:wrap; gap:.55rem; margin-bottom:1.5rem; animation:float-in .65s .08s cubic-bezier(.22,1,.36,1) both}
-.chip{color:#fff; border-radius:999px; padding:.45rem 1rem; font-size:.8rem; cursor:pointer; background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.045)); border:1px solid rgba(255,255,255,.16); box-shadow:inset 0 1px 0 rgba(255,255,255,.14); transition:background .2s,border-color .2s,box-shadow .2s,transform .2s}
+.chip{display:inline-flex; align-items:center; justify-content:center; gap:.4rem; font-family:inherit; line-height:1.2; color:#fff; border-radius:999px; padding:.45rem 1rem; font-size:.8rem; cursor:pointer; background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.045)); border:1px solid rgba(255,255,255,.16); box-shadow:inset 0 1px 0 rgba(255,255,255,.14); transition:background .2s,border-color .2s,box-shadow .2s,transform .2s}
 .chip:hover{background:linear-gradient(135deg,color-mix(in srgb,var(--violet) 25%,transparent),color-mix(in srgb,var(--cyan) 14%,transparent)); border-color:rgba(255,255,255,.3); box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 6px 18px color-mix(in srgb,var(--cyan) 10%,transparent); transform:translateY(-1px)}
 .chip:active{transform:translateY(1px) scale(.97)}
 .chip.on{background:linear-gradient(135deg,color-mix(in srgb,var(--violet) 42%,transparent),color-mix(in srgb,var(--cyan) 20%,transparent)); color:#fff; border-color:color-mix(in srgb,var(--cyan) 42%,white 10%); box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 0 22px color-mix(in srgb,var(--violet) 22%,transparent)}
@@ -374,8 +373,9 @@ mark{background:none; color:var(--pink); font-weight:bold}
 
 /* lebegő lejátszó */
 .player{position:relative; z-index:2; border-radius:999px; padding:.7rem 1.5rem; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; margin:0 auto; width:min(980px,100%)}
-.track-info{display:flex; align-items:center; gap:.75rem; width:220px}
-.track-info p{margin:0; font-size:.88rem}
+.track-info{display:flex; align-items:center; gap:.75rem; width:clamp(200px,24vw,300px)}
+.track-info p{margin:0; font-size:.88rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.track-info p:first-child{font-weight:600}
 .controls{display:flex; align-items:center; gap:1.1rem}
 .controls button{display:grid; place-items:center; background:none; border:0; color:#fff; font-size:1.05rem; cursor:pointer; transition:transform .2s cubic-bezier(.22,1,.36,1),color .2s,filter .2s}
 .controls button:hover{transform:translateY(-2px) scale(1.12); color:var(--cyan); filter:drop-shadow(0 0 7px color-mix(in srgb,var(--cyan) 35%,transparent))}
@@ -520,7 +520,10 @@ mark{background:none; color:var(--pink); font-weight:bold}
 .search-results{display:grid; gap:.4rem}
 .recent-searches{display:flex; gap:.5rem; flex-wrap:wrap}
 .text-button{padding:0; color:inherit; font:inherit; text-align:left; border:0; background:transparent; cursor:pointer}
-.text-button:hover,.entity-link:hover,.entity-link:hover .entity-card strong{color:var(--cyan)}
+.text-button:hover,.entity-link:hover,.entity-link:hover .entity-card strong,.track-link:hover{color:var(--cyan)}
+.track-link{color:inherit; text-decoration:none}
+.track-link:hover{text-decoration:underline; text-underline-offset:2px}
+.track-link:focus-visible{outline:2px solid var(--cyan); outline-offset:2px; border-radius:4px}
 .release .release-play{flex-shrink:0; padding:.2rem; border:0; background:transparent; cursor:pointer}
 .favorite-button,.icon-action{display:grid; place-items:center; min-width:2rem; min-height:2rem; padding:.3rem; color:var(--text-dim); border:0; border-radius:50%; background:transparent; cursor:pointer; transition:color .18s,background .18s,transform .18s}
 .favorite-button:hover,.icon-action:hover{color:#fff; background:rgba(255,255,255,.1); transform:scale(1.08)}
@@ -555,4 +558,20 @@ mark{background:none; color:var(--pink); font-weight:bold}
   .artist-hero h1,.album-hero h1{font-size:1.35rem}
   .album-actions .field{max-width:100%; flex:1 1 100%}
   .track-actions .favorite-button,.track-actions .icon-action{min-width:1.65rem; min-height:1.65rem}
+}
+
+/* Mobile: keep the tab bar inside the viewport and give the player room for the track title. */
+@media (max-width:720px){
+  .sidebar nav{min-width:0; overflow-x:auto; scrollbar-width:none}
+  .sidebar nav::-webkit-scrollbar{display:none}
+  .sidebar nav a{flex:1 0 auto; padding-inline:.7rem; white-space:nowrap}
+  .profile-area{flex-shrink:0}
+  .player{row-gap:.4rem}
+  .track-info{flex:1 1 100%}
+  .controls{flex:1; margin:0; justify-content:space-between}
+  .volume-control{display:none}
+  .content{padding-bottom:calc(13rem + env(safe-area-inset-bottom))}
+}
+@media (max-width:420px){
+  .content{padding-bottom:calc(13rem + env(safe-area-inset-bottom))}
 }

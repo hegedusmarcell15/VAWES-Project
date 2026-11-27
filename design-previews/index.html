@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VAWES — Design concepts</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --page: #06070c;
+    --page-text: #f6f7fb;
+    --page-muted: #9ba2b3;
+    --page-line: rgba(255,255,255,.1);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 12% -10%, rgba(124,92,255,.25), transparent 34rem),
+      radial-gradient(circle at 92% 8%, rgba(45,212,255,.16), transparent 30rem),
+      var(--page);
+    color: var(--page-text);
+    font-family: Inter, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .mood-head {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 34px 24px 18px;
+  }
+
+  .mood-eyebrow {
+    margin: 0 0 8px;
+    color: #8fe8ff;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+
+  .mood-head h1 {
+    margin: 0;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    letter-spacing: -.045em;
+    line-height: 1.02;
+  }
+
+  .mood-head p:last-child {
+    max-width: 720px;
+    margin: 12px 0 0;
+    color: var(--page-muted);
+    line-height: 1.55;
+  }
+
+  .concept-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 24px 22px;
+  }
+
+  .concept-tab {
+    padding: .65rem 1rem;
+    border: 1px solid var(--page-line);
+    border-radius: 999px;
+    background: rgba(255,255,255,.055);
+    color: var(--page-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: .82rem;
+    transition: background .2s, color .2s, border-color .2s, transform .2s;
+  }
+
+  .concept-tab:hover {
+    color: white;
+    transform: translateY(-1px);
+    border-color: rgba(255,255,255,.28);
+  }
+
+  .concept-tab.active {
+    color: #071018;
+    background: linear-gradient(135deg, #8fe8ff, #b9a8ff);
+    border-color: transparent;
+    font-weight: 800;
+    box-shadow: 0 8px 24px rgba(45,212,255,.2);
+  }
+
+  #panels { max-width: 1240px; margin: 0 auto; padding: 0 24px 60px; }
+
+  .concept-panel { display: none; }
+  .concept-panel.active { display: block; animation: panel-in .28s ease-out both; }
+  @keyframes panel-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .concept-meta {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 14px;
+  }
+
+  .concept-meta h2 { margin: 0; font-size: 1.25rem; letter-spacing: -.02em; }
+  .concept-meta p { max-width: 720px; margin: 6px 0 0; color: var(--page-muted); font-size: .86rem; line-height: 1.5; }
+  .concept-badge {
+    flex: 0 0 auto;
+    padding: .4rem .7rem;
+    border: 1px solid rgba(143,232,255,.35);
+    border-radius: 999px;
+    color: #b8f0ff;
+    background: rgba(45,212,255,.08);
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .device {
+    --bg: #0b0d14;
+    --side-bg: #0a0c12;
+    --main-bg: #0b0d14;
+    --panel: #11151f;
+    --panel-2: #161b27;
+    --text: #f5f7fb;
+    --muted: #949cad;
+    --line: rgba(255,255,255,.09);
+    --accent: #8fe8ff;
+    --accent-2: #a78bfa;
+    --accent-ink: #07101a;
+    --radius: 18px;
+    --shadow: 0 30px 80px rgba(0,0,0,.45);
+    --font: Inter, "Segoe UI", system-ui, sans-serif;
+    position: relative;
+    height: 650px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 26px;
+    background: var(--bg);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    font-family: var(--font);
+    isolation: isolate;
+  }
+
+  .shell { display: grid; grid-template-columns: 210px minmax(0,1fr); height: calc(100% - 88px); }
+
+  .side {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 22px 16px 16px;
+    background: var(--side-bg);
+    border-right: 1px solid var(--line);
+  }
+
+  .brand { margin: 0 8px 22px; font-size: 1.2rem; font-weight: 900; letter-spacing: .18em; }
+  .side-label { margin: 18px 10px 6px; color: var(--muted); font-size: .64rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+  .side a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: .82rem;
+  }
+  .side a.active { color: var(--text); background: var(--panel-2); font-weight: 700; }
+  .side a .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .75; }
+  .side .user-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--panel);
+  }
+  .avatar {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    color: var(--accent-ink);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    font-size: .72rem;
+    font-weight: 900;
+  }
+  .user-card strong { display: block; font-size: .76rem; }
+  .user-card small { display: block; color: var(--muted); font-size: .64rem; }
+
+  .main { min-width: 0; padding: 20px 24px; overflow: hidden; background: var(--main-bg); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 16px; }
+  .crumb { color: var(--muted); font-size: .72rem; }
+  .crumb b { color: var(--text); }
+  .search {
+    width: min(340px, 42%);
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+    color: var(--muted);
+    font-size: .76rem;
+  }
+  .search .key { float: right; opacity: .7; }
+
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: 260px minmax(0,1fr);
+    gap: 26px;
+    min-height: 240px;
+    overflow: hidden;
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel);
+  }
+  .hero::after { content: ""; position: absolute; inset: auto -12% -55% 42%; height: 260px; border-radius: 50%; background: var(--accent); filter: blur(70px); opacity: .12; z-index: -1; }
+  .art { position: relative; overflow: hidden; border-radius: 16px; background: radial-gradient(circle at 28% 24%, rgba(255,255,255,.72), transparent 20%), linear-gradient(135deg, var(--c1), var(--c2) 52%, var(--c3)); }
+  .art::before { content: ""; position: absolute; width: 78%; height: 78%; right: -24%; bottom: -28%; border: 20px solid rgba(255,255,255,.16); border-radius: 50%; transform: rotate(-22deg); }
+  .hero-art { height: 100%; min-height: 192px; box-shadow: 0 18px 50px rgba(0,0,0,.35); }
+  .hero-copy { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+  .kicker { margin: 0 0 10px; color: var(--accent); font-size: .66rem; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; }
+  .hero-copy h3 { max-width: 520px; margin: 0; font-size: clamp(1.7rem, 3.2vw, 2.7rem); letter-spacing: -.055em; line-height: .98; }
+  .hero-copy p:not(.kicker) { max-width: 420px; margin: 12px 0 18px; color: var(--muted); font-size: .8rem; line-height: 1.5; }
+  .hero-actions { display: flex; align-items: center; gap: 10px; }
+  .btn {
+    padding: 10px 16px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: var(--panel-2);
+    color: var(--text);
+    cursor: pointer;
+    font: inherit;
+    font-size: .78rem;
+  }
+  .btn.primary { border-color: transparent; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-ink); font-weight: 900; }
+  .ghost { color: var(--muted); background: transparent; }
+
+  .content-grid { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(220px,.65fr); gap: 18px; margin-top: 18px; }
+  .card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); padding: 16px; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .card-head h4 { margin: 0; font-size: .92rem; }
+  .card-head span { color: var(--muted); font-size: .68rem; }
+
+  .track-row {
+    display: grid;
+    grid-template-columns: 28px 34px minmax(0,1fr) 52px;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 8px;
+    border-radius: 12px;
+  }
+  .track-row:nth-child(odd) { background: rgba(255,255,255,.025); }
+  .track-row .num { color: var(--muted); font-size: .68rem; }
+  .cover { width: 34px; height: 34px; border-radius: 9px; }
+  .track-copy { min-width: 0; }
+  .track-copy strong { display: block; overflow: hidden; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+  .track-copy small { display: block; color: var(--muted); font-size: .66rem; }
+  .track-row .time { color: var(--muted); font-size: .68rem; text-align: right; }
+
+  .mood-card { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 8px; border-radius: 12px; background: rgba(255,255,255,.035); }
+  .mood-card .cover { width: 42px; height: 42px; }
+  .mood-card strong { display: block; font-size: .75rem; }
+  .mood-card small { display: block; color: var(--muted); font-size: .64rem; }
+
+  .player {
+    position: relative;
+    display: grid;
+    grid-template-columns: 240px minmax(0,1fr) 200px;
+    align-items: center;
+    gap: 20px;
+    height: 88px;
+    padding: 0 24px;
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+  }
+  .now { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .now .cover { width: 44px; height: 44px; }
+  .now strong, .now small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .now strong { font-size: .8rem; }
+  .now small { margin-top: 3px; color: var(--muted); font-size: .66rem; }
+  .transport { display: grid; grid-template-columns: auto auto 48px auto auto minmax(0,1fr); align-items: center; gap: 12px; }
+  .transport button { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: .9rem; }
+  .transport .play {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    color: var(--accent-ink);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent);
+    font-size: .8rem;
+  }
+  .progress { display: grid; grid-template-columns: 34px minmax(0,1fr) 34px; align-items: center; gap: 8px; color: var(--muted); font-size: .62rem; }
+  .bar { height: 5px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .bar i { display: block; width: 42%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+  .extras { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+  .extras button { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: .72rem; }
+  .vol { width: 86px; }
+
+  .notes { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-top: 16px; }
+  .note { padding: 14px 16px; border: 1px solid var(--page-line); border-radius: 14px; background: rgba(255,255,255,.035); }
+  .note strong { display: block; margin-bottom: 5px; font-size: .78rem; }
+  .note span { color: var(--page-muted); font-size: .75rem; line-height: 1.45; }
+
+  .c1 { --c1:#ff7a59; --c2:#7c5cff; --c3:#2dd4ff; }
+  .c2 { --c1:#2dd4ff; --c2:#4169e1; --c3:#7c5cff; }
+  .c3 { --c1:#ff4f9a; --c2:#b04dff; --c3:#ff9b54; }
+  .c4 { --c1:#5fd35f; --c2:#20d5c2; --c3:#4169e1; }
+  .c5 { --c1:#ffcf4a; --c2:#ff8c5a; --c3:#ff4f9a; }
+  .c6 { --c1:#a78bfa; --c2:#ff4fd8; --c3:#2dd4ff; }
+
+  /* 1. Midnight Radio — neutral, editorial, cover-led */
+  .midnight {
+    --bg: #080a10; --side-bg: #090b11; --main-bg: #0b0e15;
+    --panel: #10141d; --panel-2: #171c28; --text: #f6f8fc; --muted: #98a1b2;
+    --line: rgba(255,255,255,.075); --accent: #8fe8ff; --accent-2: #b3a4ff;
+    --radius: 18px; --shadow: 0 34px 90px rgba(0,0,0,.55);
+  }
+  .midnight .hero { background: linear-gradient(120deg, #111724, #0c0f17 62%); }
+  .midnight .hero-art { border-radius: 20px; }
+  .midnight .hero-copy h3 { font-weight: 850; }
+  .midnight .player { background: #0c0f16; }
+
+  /* 2. Aurora Glass 2.0 — familiar identity, calmer execution */
+  .aurora {
+    --bg: #0b0a1a; --side-bg: rgba(255,255,255,.055); --main-bg: #0b0a1a;
+    --panel: rgba(255,255,255,.075); --panel-2: rgba(255,255,255,.11);
+    --text: #fff; --muted: rgba(255,255,255,.64); --line: rgba(255,255,255,.17);
+    --accent: #2dd4ff; --accent-2: #7c5cff; --accent-ink: #fff;
+    --radius: 24px; --shadow: 0 30px 80px rgba(0,0,0,.4);
+  }
+  .aurora .device::before { content:""; position:absolute; inset:-30%; z-index:-2; background: radial-gradient(circle at 15% 20%, #7c5cff, transparent 32%), radial-gradient(circle at 85% 15%, #2dd4ff, transparent 28%), radial-gradient(circle at 65% 90%, #ff4fd8, transparent 26%); opacity:.22; filter:blur(80px); }
+  .aurora .side, .aurora .card, .aurora .hero, .aurora .player { backdrop-filter: blur(22px) saturate(145%); }
+  .aurora .hero { background: linear-gradient(125deg, rgba(124,92,255,.28), rgba(45,212,255,.08)); }
+  .aurora .hero::after { opacity:.28; filter:blur(85px); }
+  .aurora .hero-copy h3 { background: linear-gradient(110deg,#fff,#fff 35%,#b9f1ff 55%,#d6c9ff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .aurora .player { border-radius: 22px; margin: 0 12px 12px; border: 1px solid var(--line); }
+
+  /* 3. Obsidian Studio — dense, crisp, console-like */
+  .obsidian {
+    --bg: #070b0d; --side-bg: #080d0f; --main-bg: #090e10;
+    --panel: #0d1417; --panel-2: #111a1e; --text: #e9f3ef; --muted: #8ea5a0;
+    --line: rgba(94,230,168,.16); --accent: #5ee6a8; --accent-2: #f0b35b; --accent-ink: #04100b;
+    --radius: 10px; --shadow: 0 26px 70px rgba(0,0,0,.5);
+    --font: "Cascadia Mono", "SFMono-Regular", Consolas, "Segoe UI", monospace;
+  }
+  .obsidian .shell { grid-template-columns: 190px minmax(0,1fr); }
+  .obsidian .side { padding-top: 16px; }
+  .obsidian .brand { letter-spacing: .1em; }
+  .obsidian .side a { padding: 8px 10px; font-size: .75rem; }
+  .obsidian .main { padding: 14px 16px; }
+  .obsidian .hero { grid-template-columns: 170px minmax(0,1fr); min-height: 190px; padding: 16px; }
+  .obsidian .hero-art { min-height: 158px; }
+  .obsidian .hero-copy h3 { font-size: 1.8rem; }
+  .obsidian .hero-copy p:not(.kicker) { margin: 8px 0 12px; font-size: .72rem; }
+  .obsidian .content-grid { grid-template-columns: minmax(0,1.7fr) minmax(200px,.55fr); gap: 12px; margin-top: 12px; }
+  .obsidian .track-row { grid-template-columns: 22px 28px minmax(0,1fr) 44px; gap: 8px; padding: 5px 7px; border-radius: 7px; }
+  .obsidian .cover { width: 28px; height: 28px; border-radius: 6px; }
+  .obsidian .track-copy strong, .obsidian .track-copy small { font-size: .68rem; }
+  .obsidian .mood-card { border: 1px solid var(--line); background: transparent; border-radius: 8px; }
+  .obsidian .player { height: 88px; padding: 0 16px; }
+  .obsidian .transport .play { border-radius: 10px; }
+  .obsidian .bar { height: 4px; border-radius: 2px; }
+  .obsidian .bar i { background: repeating-linear-gradient(90deg, var(--accent) 0 6px, transparent 6px 9px); }
+
+  /* 4. Daylight — paper-like, high contrast, warm */
+  .daylight {
+    color-scheme: light;
+    --bg: #f3f0e9; --side-bg: #fffdf9; --main-bg: #f6f3ed;
+    --panel: #fffdf9; --panel-2: #f0ede5; --text: #191b21; --muted: #6d717c;
+    --line: #ded8cf; --accent: #5a4bff; --accent-2: #ff6b4a; --accent-ink: #fff;
+    --radius: 20px; --shadow: 0 24px 70px rgba(49,42,31,.18);
+  }
+  .daylight .device { border-color: #ddd6cb; }
+  .daylight .side { border-right-color: var(--line); }
+  .daylight .hero { background: #fffdf9; box-shadow: 0 10px 30px rgba(49,42,31,.06); }
+  .daylight .hero::after { display: none; }
+  .daylight .hero-copy h3 { color: #17181d; }
+  .daylight .card { box-shadow: 0 8px 24px rgba(49,42,31,.05); }
+  .daylight .track-row:nth-child(odd) { background: #f7f4ee; }
+  .daylight .player { border-top-color: var(--line); background: #fffdf9; }
+  .daylight .bar { background: #e3ded5; }
+
+  @media (max-width: 900px) {
+    .device { height: 620px; }
+    .shell { grid-template-columns: 150px minmax(0,1fr); }
+    .side { padding: 16px 10px; }
+    .side a { font-size: .72rem; padding: 8px; }
+    .main { padding: 14px; }
+    .hero { grid-template-columns: 180px minmax(0,1fr); }
+    .content-grid { grid-template-columns: 1fr; }
+    .content-grid .card:last-child { display: none; }
+    .player { grid-template-columns: 180px minmax(0,1fr); }
+    .extras { display: none; }
+    .notes { grid-template-columns: 1fr; }
+    .concept-meta { align-items: start; flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+  <header class="mood-head">
+    <p class="mood-eyebrow">VAWES / Design lab</p>
+    <h1>Four futures for the interface</h1>
+    <p>Static concept previews, built from the existing VAWES information architecture. Click a direction above. No production files are changed by this moodboard.</p>
+  </header>
+
+  <nav class="concept-tabs" id="tabs" aria-label="Design concepts"></nav>
+  <main id="panels"></main>
+
+  <template id="mockup">
+    <div class="device">
+      <div class="shell">
+        <aside class="side">
+          <div class="brand">VAWES</div>
+          <a href="#" class="active"><span class="dot"></span>Főoldal</a>
+          <a href="#"><span class="dot"></span>Keresés</a>
+          <a href="#"><span class="dot"></span>Könyvtár</a>
+          <a href="#"><span class="dot"></span>Kedvencek</a>
+          <p class="side-label">Lejátszási listák</p>
+          <a href="#"><span class="dot"></span>Late Night Drive</a>
+          <a href="#"><span class="dot"></span>Focus Field</a>
+          <a href="#"><span class="dot"></span>Hungarian Heat</a>
+          <div class="user-card">
+            <span class="avatar">1X</span>
+            <span><strong>1xadamm</strong><small>Admin fiók</small></span>
+          </div>
+        </aside>
+
+        <section class="main">
+          <header class="topbar">
+            <div class="crumb"><b>VAWES</b> / Főoldal</div>
+            <div class="search">Keresés a katalógusban… <span class="key">⌘ K</span></div>
+          </header>
+
+          <section class="hero">
+            <div class="hero-art art c6" aria-hidden="true"></div>
+            <div class="hero-copy">
+              <p class="kicker">Most játszott / friss kiadás</p>
+              <h3>Your music,<br />less noise.</h3>
+              <p>Egy tiszta, figyelmes otthon a feltöltött zenéidnek — kevesebb csillogás, több zene.</p>
+              <div class="hero-actions">
+                <button class="btn primary">▶ Lejátszás</button>
+                <button class="btn ghost">Lista megtekintése</button>
+              </div>
+            </div>
+          </section>
+
+          <div class="content-grid">
+            <section class="card">
+              <div class="card-head"><h4>Friss kiadások</h4><span>Mindent látásához →</span></div>
+              <div class="track-row">
+                <span class="num">01</span><span class="cover art c1"></span>
+                <span class="track-copy"><strong>Mennybol az angyal</strong><small>Ricsi</small></span><span class="time">2:29</span>
+              </div>
+              <div class="track-row">
+                <span class="num">02</span><span class="cover art c2"></span>
+                <span class="track-copy"><strong>Up Down (Do This All Day)</strong><small>T-Pain</small></span><span class="time">3:54</span>
+              </div>
+              <div class="track-row">
+                <span class="num">03</span><span class="cover art c3"></span>
+                <span class="track-copy"><strong>Enjoy the silence</strong><small>Depeche Mode · Violator</small></span><span class="time">6:13</span>
+              </div>
+              <div class="track-row">
+                <span class="num">04</span><span class="cover art c4"></span>
+                <span class="track-copy"><strong>Personal Jesus</strong><small>Depeche Mode · Violator</small></span><span class="time">4:55</span>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head"><h4>Hangulatok</h4><span>4 lista</span></div>
+              <div class="mood-card"><span class="cover art c5"></span><span><strong>Late Night Drive</strong><small>6 szám · 24 perc</small></span></div>
+              <div class="mood-card"><span class="cover art c2"></span><span><strong>Focus Field</strong><small>4 szám · 17 perc</small></span></div>
+              <div class="mood-card"><span class="cover art c3"></span><span><strong>After Hours</strong><small>5 szám · 21 perc</small></span></div>
+            </section>
+          </div>
+        </section>
+      </div>
+
+      <footer class="player">
+        <div class="now">
+          <span class="cover art c6"></span>
+          <span><strong>My Eyes</strong><small>Travis Scott · Utopia</small></span>
+        </div>
+        <div class="transport">
+          <button aria-label="Shuffle">⤨</button>
+          <button aria-label="Previous">⏮</button>
+          <button class="play" aria-label="Play">▶</button>
+          <button aria-label="Next">⏭</button>
+          <button aria-label="Repeat">↻</button>
+          <div class="progress"><span>1:42</span><span class="bar"><i></i></span><span>4:13</span></div>
+        </div>
+        <div class="extras">
+          <button>☰ Queue</button>
+          <button>🔊</button>
+          <span class="bar vol"><i></i></span>
+        </div>
+      </footer>
+    </div>
+  </template>
+
+  <script>
+    const concepts = [
+      {
+        id: 'midnight',
+        name: 'Midnight Radio',
+        badge: 'Recommended',
+        blurb: 'A neutral, cover-led listening app. The artwork carries the colour; the chrome stays quiet. This is the strongest “real product” direction.',
+        notes: [
+          ['Editorial hero', 'The home screen leads with one clear story instead of several competing sections.'],
+          ['Quiet surfaces', 'Dark neutrals replace constant neon glow. Accents appear only where they mean something.'],
+          ['Player-first', 'The bottom dock gains artwork, progress, queue and volume without becoming noisy.']
+        ]
+      },
+      {
+        id: 'aurora',
+        name: 'Aurora Glass 2.0',
+        badge: 'Lowest risk',
+        blurb: 'Your current visual identity, but disciplined: fewer gradients, clearer type, stronger contrast and better spacing. Familiar, just better tailored.',
+        notes: [
+          ['Same soul', 'Keeps the aurora blobs, glass panels and violet/cyan/pink palette.'],
+          ['Cleaner hierarchy', 'A real type scale and calmer surfaces make the interface easier to scan.'],
+          ['Safer rollout', 'Closest to the current CSS, so it can be shipped in smaller, testable steps.']
+        ]
+      },
+      {
+        id: 'obsidian',
+        name: 'Obsidian Studio',
+        badge: 'Console',
+        blurb: 'A crisp control-room aesthetic. Dense rows, mono-flavoured labels, waveform progress and minimal blur. Excellent if catalog management is the real job.',
+        notes: [
+          ['Data-first', 'Tables, status and admin actions become the visual centre of gravity.'],
+          ['No glass fatigue', 'Sharp borders and flat panels improve legibility during long sessions.'],
+          ['Technical charm', 'The waveform and mono details make the player feel like studio software.']
+        ]
+      },
+      {
+        id: 'daylight',
+        name: 'Daylight',
+        badge: 'Bold',
+        blurb: 'A warm paper-like interface with soft shadows and dark text. Distinctive and accessible, but a larger change to the theme system.',
+        notes: [
+          ['High contrast', 'Dark text on warm paper makes titles and controls immediately readable.'],
+          ['Artwork pops', 'Colourful covers stand out against a neutral, light canvas.'],
+          ['More work', 'Requires proper light/dark token pairs and careful custom-theme handling.']
+        ]
+      }
+    ];
+
+    const tabs = document.getElementById('tabs');
+    const panels = document.getElementById('panels');
+    const template = document.getElementById('mockup');
+
+    concepts.forEach((concept, index) => {
+      const button = document.createElement('button');
+      button.className = 'concept-tab';
+      button.type = 'button';
+      button.dataset.target = concept.id;
+      button.textContent = concept.name;
+      if (index === 0) button.classList.add('active');
+      tabs.appendChild(button);
+
+      const section = document.createElement('section');
+      section.className = 'concept-panel';
+      section.id = concept.id;
+      if (index === 0) section.classList.add('active');
+
+      const meta = document.createElement('div');
+      meta.className = 'concept-meta';
+      meta.innerHTML = `
+        <div>
+          <h2>${concept.name}</h2>
+          <p>${concept.blurb}</p>
+        </div>
+        <span class="concept-badge">${concept.badge}</span>
+      `;
+
+      const mockup = template.content.cloneNode(true);
+      mockup.querySelector('.device').classList.add(concept.id);
+
+      const notes = document.createElement('div');
+      notes.className = 'notes';
+      notes.innerHTML = concept.notes.map(([title, copy]) => `
+        <div class="note"><strong>${title}</strong><span>${copy}</span></div>
+      `).join('');
+
+      section.append(meta, mockup, notes);
+      panels.appendChild(section);
+    });
+
+    tabs.addEventListener('click', (event) => {
+      const button = event.target.closest('.concept-tab');
+      if (!button) return;
+      const target = button.dataset.target;
+
+      tabs.querySelectorAll('.concept-tab').forEach((item) => {
+        item.classList.toggle('active', item === button);
+      });
+      panels.querySelectorAll('.concept-panel').forEach((panel) => {
+        panel.classList.toggle('active', panel.id === target);
+      });
+    });
+  </script>
+</body>
+</html>

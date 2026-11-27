@@ -32,8 +32,8 @@ function getHeadline(language) {
 
 function DiscoverHome() {
   const { catalog, status } = useCatalog()
-  const { current, recent } = usePlayerState()
-  const { play } = usePlayerActions()
+  const { current, recent, playing } = usePlayerState()
+  const { play, toggle } = usePlayerActions()
   const { language, t, playlistName } = useLanguage()
   const { user } = useAuth()
   const displayName = user?.username ?? t('account')
@@ -97,7 +97,7 @@ function DiscoverHome() {
                 </span>
                 <span className="release-duration">{fmt(song.duration_sec)}</span>
                 <FavoriteButton song={song} />
-                <button className="release-play" type="button" aria-label={`${t('play')}: ${song.title}`} onClick={() => play(song)}><Icon name={current.id === song.id ? 'pause' : 'play'} size={13} /></button>
+                <button className="release-play" type="button" aria-label={`${current.id === song.id && playing ? t('pause') : t('play')}: ${song.title}`} onClick={() => (current.id === song.id && playing ? toggle() : play(song))}><Icon name={current.id === song.id && playing ? 'pause' : 'play'} size={13} /></button>
               </div>
             )
           })}

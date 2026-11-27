@@ -2,7 +2,6 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { PlayerProvider } from './PlayerContext.jsx'
 import Layout from './components/Layout.jsx'
-import GlassDefs from './components/GlassDefs.jsx'
 import { LanguageProvider } from './LanguageContext.jsx'
 import { CatalogProvider } from './CatalogContext.jsx'
 import { AuthProvider, useAuth } from './AuthContext.jsx'
@@ -50,7 +49,6 @@ export default function App() {
         <CatalogProvider>
           <LanguageProvider>
             <PlayerProvider>
-              <GlassDefs />
               <Suspense fallback={<RouteFallback />}>
                 <Routes>
                   <Route path="/login" element={<AuthPage />} />

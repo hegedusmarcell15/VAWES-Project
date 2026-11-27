@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VAWES — Liquid glass lab</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --page: #05060b;
+    --page-text: #f7f8fc;
+    --page-muted: #9ba3b5;
+    --page-line: rgba(255,255,255,.11);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 8% -10%, rgba(124,92,255,.28), transparent 36rem),
+      radial-gradient(circle at 92% 4%, rgba(45,212,255,.18), transparent 31rem),
+      var(--page);
+    color: var(--page-text);
+    font-family: Inter, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .mood-head { max-width: 1240px; margin: 0 auto; padding: 34px 24px 18px; }
+  .mood-eyebrow { margin: 0 0 8px; color: #8fe8ff; font-size: .72rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+  .mood-head h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 3rem); letter-spacing: -.045em; line-height: 1.02; }
+  .mood-head p:last-child { max-width: 760px; margin: 12px 0 0; color: var(--page-muted); line-height: 1.55; }
+
+  .concept-tabs { display: flex; flex-wrap: wrap; gap: .6rem; max-width: 1240px; margin: 0 auto; padding: 0 24px 22px; }
+  .concept-tab {
+    padding: .65rem 1rem;
+    border: 1px solid var(--page-line);
+    border-radius: 999px;
+    background: rgba(255,255,255,.055);
+    color: var(--page-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: .82rem;
+    transition: background .2s, color .2s, border-color .2s, transform .2s;
+  }
+  .concept-tab:hover { color: white; transform: translateY(-1px); border-color: rgba(255,255,255,.28); }
+  .concept-tab.active {
+    color: #071018;
+    background: linear-gradient(135deg, #8fe8ff, #c2b3ff);
+    border-color: transparent;
+    font-weight: 800;
+    box-shadow: 0 8px 24px rgba(45,212,255,.2);
+  }
+
+  #panels { max-width: 1240px; margin: 0 auto; padding: 0 24px 60px; }
+  .concept-panel { display: none; }
+  .concept-panel.active { display: block; animation: panel-in .28s ease-out both; }
+  @keyframes panel-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .concept-meta { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 14px; }
+  .concept-meta h2 { margin: 0; font-size: 1.25rem; letter-spacing: -.02em; }
+  .concept-meta p { max-width: 760px; margin: 6px 0 0; color: var(--page-muted); font-size: .86rem; line-height: 1.5; }
+  .concept-badge {
+    flex: 0 0 auto;
+    padding: .4rem .7rem;
+    border: 1px solid rgba(143,232,255,.35);
+    border-radius: 999px;
+    color: #b8f0ff;
+    background: rgba(45,212,255,.08);
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .device {
+    --bg: #080910;
+    --glass-a: rgba(255,255,255,.12);
+    --glass-b: rgba(255,255,255,.035);
+    --glass-c: rgba(255,255,255,.08);
+    --blur: 18px;
+    --sat: 145%;
+    --bright: 100%;
+    --text: #f6f8fc;
+    --muted: #9ba4b7;
+    --line: rgba(255,255,255,.16);
+    --edge: linear-gradient(140deg, rgba(255,255,255,.7), rgba(255,255,255,.1) 42%, rgba(45,212,255,.28), rgba(255,255,255,.32));
+    --accent: #8fe8ff;
+    --accent-2: #b7a6ff;
+    --accent-ink: #08101a;
+    --radius: 22px;
+    --sheen: .35;
+    --grain: .025;
+    --shadow: 0 30px 80px rgba(0,0,0,.45);
+    --font: Inter, "Segoe UI", system-ui, sans-serif;
+    position: relative;
+    height: 650px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 26px;
+    background: var(--bg);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    font-family: var(--font);
+    isolation: isolate;
+  }
+
+  .backdrop { position: absolute; inset: 0; z-index: -2; overflow: hidden; background: var(--bg); }
+  .backdrop .orb { position: absolute; border-radius: 50%; filter: blur(82px); opacity: .7; animation: drift 18s ease-in-out infinite alternate; will-change: transform; }
+  .backdrop .o1 { width: 55vw; height: 55vw; max-width: 660px; max-height: 660px; left: -13%; top: -22%; background: var(--o1, #7c5cff); }
+  .backdrop .o2 { width: 48vw; height: 48vw; max-width: 580px; max-height: 580px; right: -10%; top: 2%; background: var(--o2, #2dd4ff); animation-delay: -6s; }
+  .backdrop .o3 { width: 42vw; height: 42vw; max-width: 520px; max-height: 520px; left: 32%; bottom: -28%; background: var(--o3, #ff4fd8); animation-delay: -12s; }
+  .backdrop .caustics {
+    position: absolute;
+    inset: -20%;
+    opacity: var(--caustics, 0);
+    background:
+      repeating-radial-gradient(ellipse at 20% 30%, transparent 0 28px, rgba(255,255,255,.11) 29px 31px, transparent 32px 56px),
+      repeating-radial-gradient(ellipse at 78% 68%, transparent 0 34px, rgba(45,212,255,.12) 35px 38px, transparent 39px 70px);
+    filter: blur(11px);
+    animation: caustic-drift 16s linear infinite alternate;
+  }
+  .backdrop .grain {
+    position: absolute;
+    inset: 0;
+    opacity: var(--grain);
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+  }
+  @keyframes drift { to { transform: translate(5vw, 4vh) scale(1.12) rotate(8deg); } }
+  @keyframes caustic-drift { to { transform: translate3d(4%, -3%, 0) rotate(7deg) scale(1.08); } }
+
+  .glass {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background:
+      linear-gradient(145deg, var(--glass-a), var(--glass-b) 62%, var(--glass-c)) padding-box,
+      var(--edge) border-box;
+    -webkit-backdrop-filter: blur(var(--blur)) saturate(var(--sat)) brightness(var(--bright));
+    backdrop-filter: blur(var(--blur)) saturate(var(--sat)) brightness(var(--bright));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.42),
+      inset 0 -1px 0 rgba(255,255,255,.08),
+      0 18px 55px rgba(0,0,0,.24);
+  }
+  .glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: var(--sheen);
+    background:
+      linear-gradient(118deg, rgba(255,255,255,.5) 0%, rgba(255,255,255,.12) 16%, transparent 34%, transparent 63%, rgba(255,255,255,.14) 87%, rgba(255,255,255,.34) 100%);
+    mix-blend-mode: screen;
+  }
+  .glass::after {
+    content: "";
+    position: absolute;
+    top: -60%;
+    bottom: -60%;
+    left: -40%;
+    z-index: 0;
+    width: 28%;
+    pointer-events: none;
+    opacity: var(--sweep, .12);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
+    filter: blur(10px);
+    transform: skewX(-18deg);
+    animation: sweep 7s ease-in-out infinite;
+  }
+  @keyframes sweep { 0%, 58% { transform: translateX(-120%) skewX(-18deg); } 86%, 100% { transform: translateX(520%) skewX(-18deg); } }
+  .glass > * { position: relative; z-index: 1; }
+
+  .shell { display: grid; grid-template-columns: 210px minmax(0,1fr); height: calc(100% - 88px); position: relative; z-index: 1; }
+
+  .side { display: flex; flex-direction: column; gap: 4px; margin: 14px 0 14px 14px; padding: 20px 15px 14px; }
+  .brand { margin: 0 8px 22px; font-size: 1.2rem; font-weight: 900; letter-spacing: .18em; }
+  .side-label { margin: 18px 10px 6px; color: var(--muted); font-size: .64rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+  .side a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 11px; color: var(--muted); text-decoration: none; font-size: .82rem; }
+  .side a.active { color: var(--text); background: rgba(255,255,255,.14); font-weight: 700; box-shadow: inset 0 1px 0 rgba(255,255,255,.24); }
+  .side a .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .75; }
+  .user-card { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 10px; border-radius: 14px; background: rgba(255,255,255,.09); }
+  .avatar { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 auto; border-radius: 50%; color: var(--accent-ink); background: linear-gradient(135deg, var(--accent), var(--accent-2)); font-size: .72rem; font-weight: 900; }
+  .user-card strong, .user-card small { display: block; }
+  .user-card strong { font-size: .76rem; }
+  .user-card small { color: var(--muted); font-size: .64rem; }
+
+  .main { min-width: 0; padding: 20px 20px 14px 16px; overflow: hidden; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 16px; }
+  .crumb { color: var(--muted); font-size: .72rem; text-shadow: 0 1px 8px rgba(0,0,0,.35); }
+  .crumb b { color: var(--text); }
+  .search { width: min(340px, 42%); padding: 10px 14px; border-radius: 12px; color: var(--muted); font-size: .76rem; }
+  .search .key { float: right; opacity: .7; }
+
+  .hero { display: grid; grid-template-columns: 260px minmax(0,1fr); gap: 26px; min-height: 240px; padding: 24px; }
+  .art { position: relative; overflow: hidden; border-radius: 16px; background: radial-gradient(circle at 28% 24%, rgba(255,255,255,.72), transparent 20%), linear-gradient(135deg, var(--c1), var(--c2) 52%, var(--c3)); }
+  .art::before { content: ""; position: absolute; width: 78%; height: 78%; right: -24%; bottom: -28%; border: 20px solid rgba(255,255,255,.16); border-radius: 50%; transform: rotate(-22deg); }
+  .art::after { content: ""; position: absolute; inset: 8%; border: 1px solid rgba(255,255,255,.32); border-radius: 12px; -webkit-backdrop-filter: blur(5px) saturate(160%); backdrop-filter: blur(5px) saturate(160%); }
+  .hero-art { height: 100%; min-height: 192px; box-shadow: 0 18px 50px rgba(0,0,0,.35); }
+  .hero-copy { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+  .kicker { margin: 0 0 10px; color: var(--accent); font-size: .66rem; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; }
+  .hero-copy h3 { max-width: 520px; margin: 0; font-size: clamp(1.7rem, 3.2vw, 2.7rem); letter-spacing: -.055em; line-height: .98; }
+  .hero-copy p:not(.kicker) { max-width: 420px; margin: 12px 0 18px; color: var(--muted); font-size: .8rem; line-height: 1.5; }
+  .hero-actions { display: flex; align-items: center; gap: 10px; }
+  .btn { padding: 10px 16px; border: 1px solid rgba(255,255,255,.24); border-radius: 11px; background: rgba(255,255,255,.12); color: var(--text); cursor: pointer; font: inherit; font-size: .78rem; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .btn.primary { border-color: transparent; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-ink); font-weight: 900; box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 30%, transparent), inset 0 1px 0 rgba(255,255,255,.6); }
+  .btn.ghost { color: var(--muted); background: rgba(255,255,255,.05); }
+
+  .content-grid { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(220px,.65fr); gap: 16px; margin-top: 16px; }
+  .card { padding: 16px; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .card-head h4 { margin: 0; font-size: .92rem; }
+  .card-head span { color: var(--muted); font-size: .68rem; }
+  .track-row { display: grid; grid-template-columns: 28px 34px minmax(0,1fr) 52px; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 12px; }
+  .track-row:nth-child(odd) { background: rgba(255,255,255,.055); }
+  .track-row .num { color: var(--muted); font-size: .68rem; }
+  .cover { width: 34px; height: 34px; border-radius: 9px; }
+  .track-copy { min-width: 0; }
+  .track-copy strong { display: block; overflow: hidden; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+  .track-copy small { display: block; color: var(--muted); font-size: .66rem; }
+  .track-row .time { color: var(--muted); font-size: .68rem; text-align: right; }
+  .mood-card { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 8px; border-radius: 12px; background: rgba(255,255,255,.06); }
+  .mood-card .cover { width: 42px; height: 42px; }
+  .mood-card strong, .mood-card small { display: block; }
+  .mood-card strong { font-size: .75rem; }
+  .mood-card small { color: var(--muted); font-size: .64rem; }
+
+  .player { position: relative; z-index: 1; display: grid; grid-template-columns: 240px minmax(0,1fr) 200px; align-items: center; gap: 20px; height: 88px; margin: 0 14px 14px; padding: 0 24px; }
+  .now { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .now .cover { width: 44px; height: 44px; }
+  .now strong, .now small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .now strong { font-size: .8rem; }
+  .now small { margin-top: 3px; color: var(--muted); font-size: .66rem; }
+  .transport { display: grid; grid-template-columns: auto auto 48px auto auto minmax(0,1fr); align-items: center; gap: 12px; }
+  .transport button { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: .9rem; }
+  .transport .play { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; color: var(--accent-ink); background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent), inset 0 1px 0 rgba(255,255,255,.7); font-size: .8rem; }
+  .progress { display: grid; grid-template-columns: 34px minmax(0,1fr) 34px; align-items: center; gap: 8px; color: var(--muted); font-size: .62rem; }
+  .bar { height: 5px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.16); }
+  .bar i { display: block; width: 42%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+  .extras { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+  .extras button { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: .72rem; }
+  .vol { width: 86px; }
+
+  .notes { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-top: 16px; }
+  .note { padding: 14px 16px; border: 1px solid var(--page-line); border-radius: 14px; background: rgba(255,255,255,.035); }
+  .note strong { display: block; margin-bottom: 5px; font-size: .78rem; }
+  .note span { color: var(--page-muted); font-size: .75rem; line-height: 1.45; }
+
+  .c1 { --c1:#ff7a59; --c2:#7c5cff; --c3:#2dd4ff; }
+  .c2 { --c1:#2dd4ff; --c2:#4169e1; --c3:#7c5cff; }
+  .c3 { --c1:#ff4f9a; --c2:#b04dff; --c3:#ff9b54; }
+  .c4 { --c1:#5fd35f; --c2:#20d5c2; --c3:#4169e1; }
+  .c5 { --c1:#ffcf4a; --c2:#ff8c5a; --c3:#ff4f9a; }
+  .c6 { --c1:#a78bfa; --c2:#ff4fd8; --c3:#2dd4ff; }
+
+  /* 0. Current-ish baseline */
+  .baseline {
+    --blur: 18px; --sat: 145%; --bright: 100%;
+    --glass-a: rgba(255,255,255,.13); --glass-b: rgba(255,255,255,.045); --glass-c: rgba(255,255,255,.08);
+    --edge: linear-gradient(140deg, rgba(255,255,255,.32), rgba(255,255,255,.08) 60%, rgba(255,255,255,.16));
+    --sheen: .12; --sweep: 0; --grain: 0; --radius: 20px;
+    --o1: #7c5cff; --o2: #2dd4ff; --o3: #ff4fd8;
+  }
+
+  /* 1. Frosted Cathedral — thick, bright, very frosted */
+  .cathedral {
+    --blur: 38px; --sat: 170%; --bright: 112%;
+    --glass-a: rgba(255,255,255,.24); --glass-b: rgba(255,255,255,.075); --glass-c: rgba(255,255,255,.16);
+    --edge: linear-gradient(140deg, rgba(255,255,255,.95), rgba(255,255,255,.22) 36%, rgba(45,212,255,.42) 68%, rgba(255,255,255,.7));
+    --text: #ffffff; --muted: rgba(255,255,255,.76); --sheen: .85; --sweep: .2; --grain: .045;
+    --radius: 28px; --shadow: 0 34px 90px rgba(0,0,0,.42), 0 0 80px rgba(45,212,255,.1);
+    --o1: #8b6bff; --o2: #3ee6ff; --o3: #ff67d8;
+  }
+  .cathedral .glass { box-shadow: inset 0 1px 0 rgba(255,255,255,.85), inset 0 -1px 0 rgba(255,255,255,.18), inset 12px 0 24px rgba(255,255,255,.05), 0 22px 70px rgba(0,0,0,.3); }
+  .cathedral .hero-copy h3 { text-shadow: 0 2px 24px rgba(0,0,0,.28); }
+
+  /* 2. Prism Shift — iridescent chromatic edges */
+  .prism {
+    --blur: 28px; --sat: 190%; --bright: 108%;
+    --glass-a: rgba(255,255,255,.16); --glass-b: rgba(124,92,255,.1); --glass-c: rgba(45,212,255,.12);
+    --edge: conic-gradient(from 140deg, #ffffff, #2dd4ff, #7c5cff, #ff4fd8, #ffcf4a, #ffffff);
+    --accent: #7ef1ff; --accent-2: #ff8fe0; --sheen: .7; --sweep: .24; --grain: .035;
+    --radius: 24px; --shadow: 0 30px 90px rgba(0,0,0,.42), 0 0 60px rgba(124,92,255,.14);
+    --o1: #7c5cff; --o2: #2dd4ff; --o3: #ff4fd8;
+  }
+  .prism .glass::before {
+    background:
+      conic-gradient(from 210deg at 20% 0%, rgba(255,255,255,.5), transparent 28%, rgba(45,212,255,.22) 48%, transparent 66%, rgba(255,79,216,.24)),
+      linear-gradient(118deg, rgba(255,255,255,.45), transparent 42%, rgba(255,255,255,.18));
+    mix-blend-mode: screen;
+  }
+  .prism .hero-copy h3 { color: transparent; background: linear-gradient(110deg, #fff 8%, #bff6ff 42%, #f2c8ff 70%, #fff); -webkit-background-clip: text; background-clip: text; }
+  .prism .btn.primary, .prism .transport .play { background: conic-gradient(from 180deg, #2dd4ff, #7c5cff, #ff4fd8, #ffcf4a, #2dd4ff); }
+
+  /* 3. Liquid Mercury — smoked, silver, reflective */
+  .mercury {
+    --blur: 34px; --sat: 115%; --bright: 92%;
+    --glass-a: rgba(210,225,235,.17); --glass-b: rgba(10,14,20,.5); --glass-c: rgba(160,190,210,.1);
+    --edge: linear-gradient(140deg, rgba(255,255,255,.9), rgba(255,255,255,.14) 32%, rgba(150,180,200,.34) 68%, rgba(255,255,255,.5));
+    --text: #f2f7fa; --muted: #9fb0bd; --accent: #cfefff; --accent-2: #9d8cff; --accent-ink: #0b1118;
+    --sheen: .95; --sweep: .3; --grain: .055; --radius: 18px;
+    --shadow: 0 32px 90px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.06);
+    --o1: #566c8a; --o2: #7c5cff; --o3: #27313f;
+  }
+  .mercury .glass::before {
+    background:
+      radial-gradient(ellipse at 18% 0%, rgba(255,255,255,.5), transparent 42%),
+      linear-gradient(104deg, transparent 16%, rgba(255,255,255,.34) 27%, transparent 39%, transparent 62%, rgba(255,255,255,.14) 73%, transparent 82%);
+  }
+  .mercury .hero-art::after { border-radius: 40% 60% 52% 48%; transform: rotate(-14deg); }
+  .mercury .btn.primary, .mercury .transport .play { background: linear-gradient(135deg, #e8f6ff, #9ab4c8 45%, #6e7fa2); color: #0b1118; }
+
+  /* 4. Aqua Caustics — underwater refraction */
+  .aqua {
+    --blur: 30px; --sat: 200%; --bright: 112%;
+    --glass-a: rgba(210,255,255,.2); --glass-b: rgba(45,212,255,.075); --glass-c: rgba(16,185,210,.14);
+    --edge: linear-gradient(140deg, rgba(255,255,255,.95), rgba(45,212,255,.4) 38%, rgba(255,255,255,.18) 64%, rgba(125,255,240,.6));
+    --accent: #9afff2; --accent-2: #4da3ff; --accent-ink: #041a20; --muted: rgba(219,255,255,.7);
+    --sheen: .65; --sweep: .22; --grain: .03; --caustics: .9; --radius: 26px;
+    --shadow: 0 30px 90px rgba(0,60,80,.35), 0 0 80px rgba(45,212,255,.16);
+    --o1: #2dd4ff; --o2: #0ea5b7; --o3: #3b82f6;
+  }
+  .aqua .backdrop .o3 { bottom: -18%; left: 42%; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .backdrop .orb, .backdrop .caustics, .glass::after { animation: none; }
+  }
+
+  @media (max-width: 900px) {
+    .device { height: 620px; }
+    .shell { grid-template-columns: 155px minmax(0,1fr); }
+    .side { padding: 14px 10px; }
+    .side a { font-size: .72rem; padding: 8px; }
+    .main { padding: 14px 12px 12px 10px; }
+    .hero { grid-template-columns: 180px minmax(0,1fr); }
+    .content-grid { grid-template-columns: 1fr; }
+    .content-grid .card:last-child { display: none; }
+    .player { grid-template-columns: 180px minmax(0,1fr); }
+    .extras { display: none; }
+    .notes { grid-template-columns: 1fr; }
+    .concept-meta { align-items: start; flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+  <header class="mood-head">
+    <p class="mood-eyebrow">VAWES / Liquid glass lab</p>
+    <h1>Turn the glass up to eleven</h1>
+    <p>Same layout, same catalog, much more aggressive material treatment. Start with the baseline, then compare the four upgrades. Click the tabs above.</p>
+  </header>
+
+  <nav class="concept-tabs" id="tabs" aria-label="Glass concepts"></nav>
+  <main id="panels"></main>
+
+  <template id="mockup">
+    <div class="device">
+      <div class="backdrop" aria-hidden="true">
+        <span class="orb o1"></span>
+        <span class="orb o2"></span>
+        <span class="orb o3"></span>
+        <span class="caustics"></span>
+        <span class="grain"></span>
+      </div>
+
+      <div class="shell">
+        <aside class="side glass">
+          <div class="brand">VAWES</div>
+          <a href="#" class="active"><span class="dot"></span>Főoldal</a>
+          <a href="#"><span class="dot"></span>Keresés</a>
+          <a href="#"><span class="dot"></span>Könyvtár</a>
+          <a href="#"><span class="dot"></span>Kedvencek</a>
+          <p class="side-label">Lejátszási listák</p>
+          <a href="#"><span class="dot"></span>Late Night Drive</a>
+          <a href="#"><span class="dot"></span>Focus Field</a>
+          <a href="#"><span class="dot"></span>Hungarian Heat</a>
+          <div class="user-card">
+            <span class="avatar">1X</span>
+            <span><strong>1xadamm</strong><small>Admin fiók</small></span>
+          </div>
+        </aside>
+
+        <section class="main">
+          <header class="topbar">
+            <div class="crumb"><b>VAWES</b> / Főoldal</div>
+            <div class="search glass">Keresés a katalógusban… <span class="key">⌘ K</span></div>
+          </header>
+
+          <section class="hero glass">
+            <div class="hero-art art c6" aria-hidden="true"></div>
+            <div class="hero-copy">
+              <p class="kicker">Most játszott / friss kiadás</p>
+              <h3>Your music,<br />less noise.</h3>
+              <p>Egy tiszta, figyelmes otthon a feltöltött zenéidnek — most több fénnyel, több mélységgel.</p>
+              <div class="hero-actions">
+                <button class="btn primary">▶ Lejátszás</button>
+                <button class="btn ghost">Lista megtekintése</button>
+              </div>
+            </div>
+          </section>
+
+          <div class="content-grid">
+            <section class="card glass">
+              <div class="card-head"><h4>Friss kiadások</h4><span>Mindent látásához →</span></div>
+              <div class="track-row">
+                <span class="num">01</span><span class="cover art c1"></span>
+                <span class="track-copy"><strong>Mennybol az angyal</strong><small>Ricsi</small></span><span class="time">2:29</span>
+              </div>
+              <div class="track-row">
+                <span class="num">02</span><span class="cover art c2"></span>
+                <span class="track-copy"><strong>Up Down (Do This All Day)</strong><small>T-Pain</small></span><span class="time">3:54</span>
+              </div>
+              <div class="track-row">
+                <span class="num">03</span><span class="cover art c3"></span>
+                <span class="track-copy"><strong>Enjoy the silence</strong><small>Depeche Mode · Violator</small></span><span class="time">6:13</span>
+              </div>
+              <div class="track-row">
+                <span class="num">04</span><span class="cover art c4"></span>
+                <span class="track-copy"><strong>Personal Jesus</strong><small>Depeche Mode · Violator</small></span><span class="time">4:55</span>
+              </div>
+            </section>
+
+            <section class="card glass">
+              <div class="card-head"><h4>Hangulatok</h4><span>4 lista</span></div>
+              <div class="mood-card"><span class="cover art c5"></span><span><strong>Late Night Drive</strong><small>6 szám · 24 perc</small></span></div>
+              <div class="mood-card"><span class="cover art c2"></span><span><strong>Focus Field</strong><small>4 szám · 17 perc</small></span></div>
+              <div class="mood-card"><span class="cover art c3"></span><span><strong>After Hours</strong><small>5 szám · 21 perc</small></span></div>
+            </section>
+          </div>
+        </section>
+      </div>
+
+      <footer class="player glass">
+        <div class="now">
+          <span class="cover art c6"></span>
+          <span><strong>My Eyes</strong><small>Travis Scott · Utopia</small></span>
+        </div>
+        <div class="transport">
+          <button aria-label="Shuffle">⤨</button>
+          <button aria-label="Previous">⏮</button>
+          <button class="play" aria-label="Play">▶</button>
+          <button aria-label="Next">⏭</button>
+          <button aria-label="Repeat">↻</button>
+          <div class="progress"><span>1:42</span><span class="bar"><i></i></span><span>4:13</span></div>
+        </div>
+        <div class="extras">
+          <button>☰ Queue</button>
+          <button>🔊</button>
+          <span class="bar vol"><i></i></span>
+        </div>
+      </footer>
+    </div>
+  </template>
+
+  <script>
+    const concepts = [
+      {
+        id: 'baseline',
+        name: 'Current-ish',
+        badge: 'Baseline',
+        blurb: 'A close approximation of what you have now: aurora blobs, translucent panels, 18px blur and modest highlights. Useful for comparison.',
+        notes: [
+          ['Familiar', 'This is roughly the current material recipe from glass.css.'],
+          ['Readable', 'The interface is clear, but the glass is fairly flat and uniform.'],
+          ['Starting point', 'Everything below changes the material without changing the information.']
+        ]
+      },
+      {
+        id: 'cathedral',
+        name: 'Frosted Cathedral',
+        badge: 'Thick glass',
+        blurb: 'Heavy frost, brighter edges, deeper blur and bevel-like inner shadows. Panels feel like sculpted blocks of chilled glass.',
+        notes: [
+          ['38px frost', 'Much stronger blur makes the neon background dissolve into soft colour.'],
+          ['White specular edge', 'Bright top borders and inner highlights sell thickness.'],
+          ['Fine grain', 'A subtle noise layer stops the glass looking like flat plastic.']
+        ]
+      },
+      {
+        id: 'prism',
+        name: 'Prism Shift',
+        badge: 'Recommended',
+        blurb: 'Iridescent chromatic borders, rotating colour sheen and animated light sweeps. This is the most visibly “cooler” version while staying usable.',
+        notes: [
+          ['Chromatic edge', 'Conic-gradient borders catch violet, cyan, pink and gold.'],
+          ['Moving sheen', 'A slow highlight travels across panels like light over curved glass.'],
+          ['Prismatic buttons', 'Primary actions inherit the same refracted colour language.']
+        ]
+      },
+      {
+        id: 'mercury',
+        name: 'Liquid Mercury',
+        badge: 'Premium',
+        blurb: 'Smoked, silvered glass with mirror-like specular streaks. Less rainbow, more expensive control room.',
+        notes: [
+          ['Smoked tint', 'Dark translucent panels reduce visual noise and increase contrast.'],
+          ['Mirror streaks', 'Wide diagonal highlights mimic reflections on polished metal-glass.'],
+          ['Subtle curvature', 'Rounded radii and curved overlays make the material feel poured.']
+        ]
+      },
+      {
+        id: 'aqua',
+        name: 'Aqua Caustics',
+        badge: 'Playful',
+        blurb: 'Underwater light patterns, cyan refraction and bubbly depth. The loudest and most playful of the set.',
+        notes: [
+          ['Caustic layers', 'Animated ripple patterns sit behind the glass, not on top of the text.'],
+          ['Cool cyan cast', 'Backdrop and panel colours lean aquatic while preserving contrast.'],
+          ['High saturation', 'Best if you want the app to feel energetic rather than serious.']
+        ]
+      }
+    ];
+
+    const tabs = document.getElementById('tabs');
+    const panels = document.getElementById('panels');
+    const template = document.getElementById('mockup');
+
+    concepts.forEach((concept, index) => {
+      const button = document.createElement('button');
+      button.className = 'concept-tab';
+      button.type = 'button';
+      button.dataset.target = concept.id;
+      button.textContent = concept.name;
+      if (concept.id === 'prism') button.classList.add('active');
+      tabs.appendChild(button);
+
+      const section = document.createElement('section');
+      section.className = 'concept-panel';
+      section.id = concept.id;
+      if (concept.id === 'prism') section.classList.add('active');
+
+      const meta = document.createElement('div');
+      meta.className = 'concept-meta';
+      meta.innerHTML = `
+        <div>
+          <h2>${concept.name}</h2>
+          <p>${concept.blurb}</p>
+        </div>
+        <span class="concept-badge">${concept.badge}</span>
+      `;
+
+      const mockup = template.content.cloneNode(true);
+      mockup.querySelector('.device').classList.add(concept.id);
+
+      const notes = document.createElement('div');
+      notes.className = 'notes';
+      notes.innerHTML = concept.notes.map(([title, copy]) => `
+        <div class="note"><strong>${title}</strong><span>${copy}</span></div>
+      `).join('');
+
+      section.append(meta, mockup, notes);
+      panels.appendChild(section);
+    });
+
+    tabs.addEventListener('click', (event) => {
+      const button = event.target.closest('.concept-tab');
+      if (!button) return;
+      const target = button.dataset.target;
+      tabs.querySelectorAll('.concept-tab').forEach((item) => item.classList.toggle('active', item === button));
+      panels.querySelectorAll('.concept-panel').forEach((panel) => panel.classList.toggle('active', panel.id === target));
+    });
+  </script>
+</body>
+</html>

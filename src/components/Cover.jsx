@@ -6,7 +6,7 @@ function Cover({ color, size = 'md', image }) {
     <span
       className={`cover ${size}`}
       style={{
-        '--c': COLORS[color],
+        '--c': `var(--${COLORS[color] ? color : 'violet'}, ${COLORS[color] ?? COLORS.violet})`,
         '--cover-image': 'none',
       }}
     >
