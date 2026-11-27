@@ -46,6 +46,12 @@ export default function Search() {
   }, [q])
 
   useEffect(() => {
+    const focusSearch = () => searchInputRef.current?.focus()
+    window.addEventListener('vawes-focus-search-input', focusSearch)
+    return () => window.removeEventListener('vawes-focus-search-input', focusSearch)
+  }, [])
+
+  useEffect(() => {
     if (!query || query !== norm(term)) return
     const next = [term, ...recent.filter((item) => norm(item) !== query)].slice(0, 8)
     setRecent(next)

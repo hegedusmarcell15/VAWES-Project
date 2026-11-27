@@ -143,6 +143,8 @@ const translations = {
     account: 'Fiók', accountSettings: 'Fiókbeállítások', profile: 'Profil', preferences: 'Beállítások',
     signOut: 'Kijelentkezés',
     accountReady: 'Helyi profil', accountDescription: 'A profil és a megjelenési beállítások ezen az eszközön tárolódnak.', profileSettings: 'Profilbeállítások', profilePhotoDescription: 'A profilképed itt jelenik meg az alkalmazásban.', choosePhoto: 'Kép feltöltése', removePhoto: 'Kép eltávolítása', profilePhotoHint: 'PNG vagy JPG, legfeljebb 5 MB.', avatarTypeError: 'Csak PNG vagy JPG kép tölthető fel.', avatarSizeError: 'A kép mérete legfeljebb 5 MB lehet.', avatarReadError: 'A kép betöltése nem sikerült.', appearance: 'Megjelenés', appearanceDescription: 'Válassz egy színvilágot az alkalmazás üvegfelületéhez.', customTheme: 'Saját téma', customColors: 'Saját színek', backgroundColor: 'Háttér', violetColor: 'Lila kiemelés', cyanColor: 'Cián kiemelés', pinkColor: 'Rózsaszín kiemelés', playButtonStyle: 'Lejátszógomb stílusa', stylePrism: 'Prizma', styleHalo: 'Glória', styleSolid: 'Fényes', styleMinimal: 'Minimalista', glassIntensity: 'Üvegfelület', glassIntensityDescription: 'Aktív liquid-glass stílus', active: 'Aktív', close: 'Bezárás',
+    themeSteel: 'Acél', themeDusk: 'Alkony', themeFrost: 'Dér', themeAurora: 'Aurora', themeOcean: 'Mély óceán', themeSunset: 'Naplemente', themeGraphite: 'Grafit',
+    playbackSpeed: 'Lejátszási sebesség', sleepTimer: 'Elalvási időzítő', off: 'Ki', minutesShort: 'perc', sleepEndsIn: 'Lejátszás leáll ekkor:', keyboardShortcuts: 'Billentyűparancsok', shortcutsDescription: 'A zenelejátszó gyors vezérlése a billentyűzeten.', shortcutPlayPause: 'Lejátszás / szünet', shortcutSeek: 'Ugrás 5 másodpercet', shortcutMute: 'Némítás', shortcutShuffle: 'Keverés', shortcutRepeat: 'Ismétlés váltása', shortcutSearch: 'Keresés fókuszálása', shortcutHelp: 'Súgó megnyitása',
   },
   en: {
     home: 'Home', search: 'Search', library: 'Library', playlists: 'Playlists',
@@ -285,6 +287,8 @@ const translations = {
     account: 'Account', accountSettings: 'Account settings', profile: 'Profile', preferences: 'Preferences',
     signOut: 'Sign out',
     accountReady: 'Local profile', accountDescription: 'Profile and appearance preferences are stored on this device.', profileSettings: 'Profile settings', profilePhotoDescription: 'Your profile photo appears here across the app.', choosePhoto: 'Upload image', removePhoto: 'Remove image', profilePhotoHint: 'PNG or JPG, up to 5 MB.', avatarTypeError: 'Only PNG or JPG images are supported.', avatarSizeError: 'The image must be 5 MB or smaller.', avatarReadError: 'The image could not be loaded.', appearance: 'Appearance', appearanceDescription: 'Choose a color mood for the app glass surfaces.', customTheme: 'Custom theme', customColors: 'Custom colors', backgroundColor: 'Background', violetColor: 'Violet accent', cyanColor: 'Cyan accent', pinkColor: 'Pink accent', playButtonStyle: 'Play button style', stylePrism: 'Prism', styleHalo: 'Halo', styleSolid: 'Glossy', styleMinimal: 'Minimal', glassIntensity: 'Glass surface', glassIntensityDescription: 'Liquid-glass styling is active', active: 'Active', close: 'Close',
+    themeSteel: 'Steel', themeDusk: 'Dusk', themeFrost: 'Frost', themeAurora: 'Aurora', themeOcean: 'Deep ocean', themeSunset: 'Sunset glow', themeGraphite: 'Graphite',
+    playbackSpeed: 'Playback speed', sleepTimer: 'Sleep timer', off: 'Off', minutesShort: 'min', sleepEndsIn: 'Playback stops in', keyboardShortcuts: 'Keyboard shortcuts', shortcutsDescription: 'Control playback without leaving the keyboard.', shortcutPlayPause: 'Play / pause', shortcutSeek: 'Seek 5 seconds', shortcutMute: 'Mute', shortcutShuffle: 'Shuffle', shortcutRepeat: 'Cycle repeat', shortcutSearch: 'Focus search', shortcutHelp: 'Open shortcuts',
   },
   zh: {
     home: '首页', search: '搜索', library: '音乐库', playlists: '播放列表',
@@ -427,6 +431,8 @@ const translations = {
     account: '账户', accountSettings: '账户设置', profile: '个人资料', preferences: '偏好设置',
     signOut: '退出登录',
     accountReady: '本地资料', accountDescription: '个人资料和外观偏好设置保存在此设备上。', profileSettings: '个人资料设置', profilePhotoDescription: '你的头像会显示在应用的各个位置。', choosePhoto: '上传图片', removePhoto: '移除图片', profilePhotoHint: 'PNG 或 JPG，最大 5 MB。', avatarTypeError: '仅支持 PNG 或 JPG 图片。', avatarSizeError: '图片大小不能超过 5 MB。', avatarReadError: '无法读取图片。', appearance: '外观', appearanceDescription: '为应用的玻璃界面选择一种色彩氛围。', customTheme: '自定义主题', customColors: '自定义颜色', backgroundColor: '背景', violetColor: '紫色强调', cyanColor: '青色强调', pinkColor: '粉色强调', playButtonStyle: '播放按钮样式', stylePrism: '棱镜', styleHalo: '光环', styleSolid: '亮面', styleMinimal: '极简', glassIntensity: '玻璃界面', glassIntensityDescription: 'Liquid glass 样式已启用', active: '已启用', close: '关闭',
+    themeSteel: '钢灰', themeDusk: '暮色', themeFrost: '霜蓝', themeAurora: '极光', themeOcean: '深海', themeSunset: '落日', themeGraphite: '石墨',
+    playbackSpeed: '播放速度', sleepTimer: '睡眠定时器', off: '关闭', minutesShort: '分钟', sleepEndsIn: '播放将在此后停止：', keyboardShortcuts: '键盘快捷键', shortcutsDescription: '无需离开键盘即可控制播放。', shortcutPlayPause: '播放 / 暂停', shortcutSeek: '跳转 5 秒', shortcutMute: '静音', shortcutShuffle: '随机播放', shortcutRepeat: '切换循环模式', shortcutSearch: '聚焦搜索', shortcutHelp: '打开快捷键说明',
   },
 }
 

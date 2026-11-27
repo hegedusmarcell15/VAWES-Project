@@ -24,6 +24,45 @@ const loadSavedPlayer = (songs) => {
 
 const sourceFor = audioUrlForSong
 
+const SPEEDS = [0.75, 1, 1.25, 1.5]
+
+const readSpeed = () => {
+  try {
+    const saved = Number(localStorage.getItem('vawes-speed'))
+    return SPEEDS.includes(saved) ? saved : 1
+  } catch {
+    return 1
+  }
+}
+
+const readRecent = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('vawes-recent-tracks') ?? '[]')
+    return Array.isArray(saved)
+      ? saved.filter((id) => typeof id === 'string' || typeof id === 'number').slice(0, 12)
+      : []
+  } catch {
+    return []
+  }
+}
+
+const readRepeat = () => {
+  try {
+    const saved = localStorage.getItem('vawes-repeat')
+    return ['off', 'all', 'one'].includes(saved) ? saved : 'off'
+  } catch {
+    return 'off'
+  }
+}
+
+const readShuffle = () => {
+  try {
+    return localStorage.getItem('vawes-shuffle') === '1'
+  } catch {
+    return false
+  }
+}
+
 export function PlayerProvider({ children }) {
   const { catalog } = useCatalog()
   const songs = catalog.songs
@@ -38,8 +77,13 @@ export function PlayerProvider({ children }) {
   const [volume, setVolume] = useState(saved.volume)
   const [muted, setMuted] = useState(saved.muted)
   const [status, setStatus] = useState('idle')
-  const [shuffle, setShuffle] = useState(false)
-  const [repeat, setRepeat] = useState('off')
+  const [shuffle, setShuffle] = useState(readShuffle)
+  const [repeat, setRepeat] = useState(readRepeat)
+  const [speed, setSpeedState] = useState(readSpeed)
+  const [sleepMinutes, setSleepMinutes] = useState(0)
+  const [sleepEndsAt, setSleepEndsAt] = useState(null)
+  const [sleepRemaining, setSleepRemaining] = useState(0)
+  const [recent, setRecent] = useState(readRecent)
   const audioRef = useRef(null)
   const pendingSeekRef = useRef(saved.elapsed)
   const requestIdRef = useRef(0)
@@ -47,9 +91,11 @@ export function PlayerProvider({ children }) {
   const queueRef = useRef(songs)
   const currentRef = useRef(current)
   const repeatRef = useRef(repeat)
+  const speedRef = useRef(speed)
   const stepRef = useRef(null)
   currentRef.current = current
   repeatRef.current = repeat
+  speedRef.current = speed
 
   const startAudio = useCallback((song, position = 0) => {
     const audio = audioRef.current
@@ -189,12 +235,35 @@ export function PlayerProvider({ children }) {
   const cycleRepeat = useCallback(() => {
     setRepeat((value) => value === 'off' ? 'all' : value === 'all' ? 'one' : 'off')
   }, [])
+  const setSpeed = useCallback((value) => {
+    const next = SPEEDS.includes(Number(value)) ? Number(value) : 1
+    setSpeedState(next)
+    if (audioRef.current) audioRef.current.playbackRate = next
+    try {
+      localStorage.setItem('vawes-speed', String(next))
+    } catch {
+      // Playback speed still applies for this session.
+    }
+  }, [])
+  const setSleepTimer = useCallback((minutes) => {
+    const next = Number(minutes)
+    if (!next || next < 0) {
+      setSleepMinutes(0)
+      setSleepEndsAt(null)
+      setSleepRemaining(0)
+      return
+    }
+    setSleepMinutes(next)
+    setSleepEndsAt(Date.now() + next * 60000)
+    setSleepRemaining(next * 60000)
+  }, [])
 
   useEffect(() => {
     const audio = new Audio()
     audio.preload = 'metadata'
     audio.volume = volume
     audio.muted = muted
+    audio.playbackRate = speedRef.current
     audioRef.current = audio
 
     const onTimeUpdate = () => {
@@ -273,6 +342,65 @@ export function PlayerProvider({ children }) {
   }, [current, elapsed, muted, volume])
 
   useEffect(() => {
+    if (audioRef.current) audioRef.current.playbackRate = speed
+    try {
+      localStorage.setItem('vawes-speed', String(speed))
+    } catch {
+      // Playback speed still applies for this session.
+    }
+  }, [speed])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('vawes-shuffle', shuffle ? '1' : '0')
+    } catch {
+      // Shuffle still applies for this session.
+    }
+  }, [shuffle])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('vawes-repeat', repeat)
+    } catch {
+      // Repeat still applies for this session.
+    }
+  }, [repeat])
+
+  useEffect(() => {
+    if (!sleepEndsAt) {
+      setSleepRemaining(0)
+      return undefined
+    }
+    const tick = () => {
+      const remaining = Math.max(0, sleepEndsAt - Date.now())
+      setSleepRemaining(remaining)
+      if (remaining <= 0) {
+        setSleepEndsAt(null)
+        setSleepMinutes(0)
+        audioRef.current?.pause()
+        setPlaying(false)
+      }
+    }
+    tick()
+    const timer = window.setInterval(tick, 1000)
+    return () => window.clearInterval(timer)
+  }, [sleepEndsAt])
+
+  const currentIdForHistory = current?.id
+  useEffect(() => {
+    if (!playing || currentIdForHistory == null) return
+    setRecent((previous) => {
+      const next = [currentIdForHistory, ...previous.filter((id) => String(id) !== String(currentIdForHistory))].slice(0, 12)
+      try {
+        localStorage.setItem('vawes-recent-tracks', JSON.stringify(next))
+      } catch {
+        // Listening history is a convenience, not a requirement.
+      }
+      return next
+    })
+  }, [playing, currentIdForHistory])
+
+  useEffect(() => {
     const onKeyDown = (event) => {
       const target = event.target
       if (target instanceof HTMLElement && (
@@ -288,11 +416,23 @@ export function PlayerProvider({ children }) {
       } else if (event.key === 'ArrowRight') {
         event.preventDefault()
         seek(elapsed + 5)
+      } else if ((event.key === 'm' || event.key === 'M') && !event.repeat) {
+        toggleMute()
+      } else if ((event.key === 's' || event.key === 'S') && !event.repeat) {
+        setShuffle((value) => !value)
+      } else if ((event.key === 'r' || event.key === 'R') && !event.repeat) {
+        cycleRepeat()
+      } else if (event.key === '/') {
+        event.preventDefault()
+        window.dispatchEvent(new CustomEvent('vawes-focus-search'))
+      } else if (event.key === '?') {
+        event.preventDefault()
+        window.dispatchEvent(new CustomEvent('vawes-shortcuts'))
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [elapsed, seek, toggle])
+  }, [cycleRepeat, elapsed, seek, toggle, toggleMute])
 
   useEffect(() => {
     if (!current || !('mediaSession' in navigator)) return
@@ -328,7 +468,7 @@ export function PlayerProvider({ children }) {
     })
     if (Number.isFinite(duration) && duration > 0 && typeof mediaSession.setPositionState === 'function') {
       try {
-        mediaSession.setPositionState({ duration, playbackRate: 1, position: Math.min(elapsed, duration) })
+        mediaSession.setPositionState({ duration, playbackRate: speed, position: Math.min(elapsed, duration) })
       } catch {
         // Some browsers reject position state until metadata is available.
       }
@@ -342,16 +482,17 @@ export function PlayerProvider({ children }) {
         }
       })
     }
-  }, [current, duration, elapsed, next, prev, seek, toggle])
+  }, [current, duration, elapsed, next, prev, seek, speed, toggle])
 
   const state = useMemo(() => ({
     current, playing, elapsed, duration, volume, muted, status, shuffle, repeat, queue: queueRef.current,
-  }), [current, playing, elapsed, duration, volume, muted, status, shuffle, repeat])
+    speed, sleepMinutes, sleepRemaining, sleepEndsAt, recent,
+  }), [current, playing, elapsed, duration, volume, muted, status, shuffle, repeat, speed, sleepMinutes, sleepRemaining, sleepEndsAt, recent])
   const actions = useMemo(() => ({
     play, playQueue, toggle, seek, next, prev, changeVolume, toggleMute,
     toggleShuffle: () => setShuffle((value) => !value),
-    cycleRepeat,
-  }), [next, play, playQueue, prev, seek, toggle, changeVolume, toggleMute, cycleRepeat])
+    cycleRepeat, setSpeed, setSleepTimer,
+  }), [next, play, playQueue, prev, seek, toggle, changeVolume, toggleMute, cycleRepeat, setSpeed, setSleepTimer])
   return (
     <StateCtx.Provider value={state}>
       <ActionsCtx.Provider value={actions}>{children}</ActionsCtx.Provider>

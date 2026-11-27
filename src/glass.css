@@ -3,24 +3,36 @@
   --violet:#7c5cff; --cyan:#2dd4ff; --pink:#ff4fd8; --orange:#ff8c5a;
   --green:#5fd35f; --blue:#4f6bff; --yellow:#ffcf4a; --red:#e5484d;
 
-  /* az üveg "receptje" - itt egy helyen hangolható */
-  --glass-bg:     linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.045));
-  --glass-border: rgba(255,255,255,.16);
-  --glass-blur:   blur(22px) saturate(150%);
-  --glass-shadow: 0 18px 50px rgba(0,0,0,.22),
-                  inset 0 1px 0 rgba(255,255,255,.2),
-                  inset 0 -1px 0 rgba(255,255,255,.04);
-  --text-dim: rgba(255,255,255,.62);
-  --app-bg:#0b0a1a;
-  --accent-soft: color-mix(in srgb,var(--violet) 20%,transparent);
-  --accent-faint: color-mix(in srgb,var(--cyan) 10%,transparent);
-  --accent-glow: color-mix(in srgb,var(--cyan) 30%,transparent);
-  --menu-bg: linear-gradient(145deg,color-mix(in srgb,var(--violet) 25%,var(--app-bg) 75%),color-mix(in srgb,var(--cyan) 12%,var(--app-bg) 88%));
+  /* Theme-driven surface tokens (ThemeContext overrides these). */
+  --app-bg:#202a30;
+  --app-ink:#e7eef0;
+  --app-muted:#9aa9ae;
+  --app-surface:rgba(223,235,238,.055);
+  --app-surface-2:rgba(223,235,238,.022);
+  --app-rim:rgba(210,228,232,.14);
+  --app-rim-soft:rgba(210,228,232,.07);
+  --accent:#9fb8bd;
+  --accent-2:#84969e;
+  --shadow:rgba(8,14,18,.32);
+
+  /* The glass recipe: a thin refractive skin over a calm translucent body. */
+  --glass-bg:linear-gradient(155deg,color-mix(in srgb,var(--app-ink) 9%,transparent),color-mix(in srgb,var(--app-ink) 3.4%,transparent) 46%,color-mix(in srgb,var(--app-ink) 1.6%,transparent));
+  --glass-border:var(--app-rim);
+  --glass-blur:blur(22px) saturate(126%);
+  --glass-shadow:0 18px 46px var(--shadow),
+                 inset 0 1px 0 color-mix(in srgb,var(--app-ink) 17%,transparent),
+                 inset 0 -1px 0 color-mix(in srgb,var(--app-ink) 5%,transparent);
+  --text-dim:color-mix(in srgb,var(--app-ink) 62%,transparent);
+  --accent-soft:color-mix(in srgb,var(--accent) 18%,transparent);
+  --accent-faint:color-mix(in srgb,var(--accent-2) 10%,transparent);
+  --accent-glow:color-mix(in srgb,var(--accent-2) 28%,transparent);
+  --menu-bg:linear-gradient(150deg,color-mix(in srgb,var(--accent) 14%,var(--app-bg) 86%),color-mix(in srgb,var(--app-bg) 93%,var(--accent-2) 7%));
+  --font-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
 }
 
 *{box-sizing:border-box}
 html,body,#root{height:100%}
-body{margin:0; font-family:Arial, Helvetica, sans-serif; color:#fff; background:var(--app-bg); transition:background .35s ease}
+body{margin:0; font-family:"Segoe UI",ui-sans-serif,-apple-system,BlinkMacSystemFont,Arial,Helvetica,sans-serif; color:var(--app-ink); background:var(--app-bg); transition:background .35s ease; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility}
 
 /* keskeny, áttetsző üveg-scrollbar a böngésző alapértelmezettje helyett */
 *{
@@ -60,14 +72,16 @@ body{margin:0; font-family:Arial, Helvetica, sans-serif; color:#fff; background:
 .app{position:relative; height:100vh; display:flex; flex-direction:column; gap:.9rem; padding:.9rem; overflow:hidden}
 
 /* színes "folyadék" a háttérben - ezen át látszik az üveg */
-.blob{position:absolute; border-radius:50%; filter:blur(110px); opacity:.52; z-index:0; animation:drift 22s ease-in-out infinite alternate; transition:background .5s ease; will-change:transform}
+.blob{position:absolute; border-radius:50%; filter:blur(120px); opacity:.3; z-index:0; animation:drift 26s ease-in-out infinite alternate; transition:background .5s ease; will-change:transform}
 .b1{width:48vw; height:48vw; background:var(--violet); top:-14vw; left:-8vw}
-.b2{width:40vw; height:40vw; background:var(--cyan);   bottom:-12vw; left:28vw; animation-delay:-7s}
-.b3{width:38vw; height:38vw; background:var(--pink);   top:6vh; right:-10vw; animation-delay:-13s}
+.b2{width:40vw; height:40vw; background:var(--cyan);   bottom:-12vw; left:28vw; animation-delay:-9s}
+.b3{width:38vw; height:38vw; background:var(--pink);   top:6vh; right:-10vw; animation-delay:-16s}
 @keyframes drift{to{transform:translate(6vw,4vh) scale(1.12)}}
 @media (prefers-reduced-motion:reduce){.blob,.greeting,.greeting span,.glass,.search-box,.chips,.release,.mood-card,.tile,#playBtn,#playBtn::before,.welcome,.welcome::before,.hero-copy>.eyebrow,.hero-line,.welcome-copy,.welcome-orb,.welcome-orb::before,.timeline-shell.is-playing .timeline-glow::after,.timeline-shell.is-playing .timeline::-webkit-slider-thumb,.timeline-shell.is-playing .timeline::-moz-range-thumb{animation:none}.content{scroll-behavior:auto}}
 
 .glass{
+  position:relative;
+  isolation:isolate;
   background:var(--glass-bg);
   border:1px solid var(--glass-border);
   -webkit-backdrop-filter:var(--glass-blur);
@@ -76,6 +90,35 @@ body{margin:0; font-family:Arial, Helvetica, sans-serif; color:#fff; background:
   animation:glass-rise .7s cubic-bezier(.22,1,.36,1) both;
   backface-visibility:hidden;
 }
+/* Refracted colour skin: generated displacement map bends a soft accent wash. */
+.glass::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  border-radius:inherit;
+  pointer-events:none;
+  background:
+    radial-gradient(120% 90% at 16% 0%,color-mix(in srgb,var(--accent-2) 15%,transparent),transparent 58%),
+    radial-gradient(120% 95% at 94% 100%,color-mix(in srgb,var(--accent) 13%,transparent),transparent 62%);
+  filter:var(--glass-lens,none);
+  opacity:.55;
+}
+/* Angle-weighted rim light, kept faint so it reads as glass, not chrome. */
+.glass::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  border-radius:inherit;
+  pointer-events:none;
+  background-image:var(--glass-specular,none);
+  background-size:100% 100%;
+  background-repeat:no-repeat;
+  mix-blend-mode:screen;
+  opacity:.3;
+}
+.glass-defs{position:absolute; width:0; height:0; overflow:hidden; pointer-events:none}
 @keyframes glass-rise{from{opacity:0; transform:translateY(8px) scale(.99)}to{opacity:1; transform:translateY(0) scale(1)}}
 
 .main{position:relative; z-index:1; display:flex; gap:.9rem; flex:1; min-height:0}
@@ -121,7 +164,7 @@ body{margin:0; font-family:Arial, Helvetica, sans-serif; color:#fff; background:
 .profile-signout .icon{color:#ff9eb9}
 @keyframes profile-menu-in{from{opacity:0; transform:translateY(.35rem) scale(.97)}to{opacity:1; transform:translateY(0) scale(1)}}
 .appearance-backdrop{position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:1rem; background:rgba(4,4,18,.38); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); animation:appearance-fade .2s ease-out both}
-.appearance-modal{width:min(420px,100%); padding:1.15rem; border-radius:22px; background:var(--menu-bg); animation:appearance-in .25s cubic-bezier(.22,1,.36,1) both}
+.appearance-modal{width:min(420px,100%); max-height:calc(100vh - 2rem); overflow-y:auto; padding:1.15rem; border-radius:22px; background:var(--menu-bg); animation:appearance-in .25s cubic-bezier(.22,1,.36,1) both}
 .appearance-heading{display:flex; align-items:flex-start; justify-content:space-between; gap:1rem}
 .appearance-heading h2{margin:.12rem 0 0; font-size:1.35rem}
 .appearance-close{display:grid; place-items:center; width:2rem; height:2rem; color:var(--text-dim); border:1px solid rgba(255,255,255,.14); border-radius:50%; background:rgba(255,255,255,.06); cursor:pointer; transition:background .2s,color .2s,transform .2s}
@@ -146,7 +189,24 @@ body{margin:0; font-family:Arial, Helvetica, sans-serif; color:#fff; background:
 .appearance-row{display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:1rem; padding:.7rem; border-top:1px solid rgba(255,255,255,.1); color:#fff; font-size:.76rem}
 .appearance-row span:first-child{display:flex; flex-direction:column; gap:.18rem}
 .appearance-row small{color:var(--text-dim); font-size:.67rem}
-.appearance-badge{padding:.3rem .55rem; color:var(--cyan); border:1px solid color-mix(in srgb,var(--cyan) 25%,transparent); border-radius:999px; background:color-mix(in srgb,var(--cyan) 8%,transparent); font-size:.65rem}
+.appearance-badge{padding:.3rem .55rem; color:var(--accent); border:1px solid color-mix(in srgb,var(--accent) 25%,transparent); border-radius:999px; background:color-mix(in srgb,var(--accent) 8%,transparent); font-size:.65rem}
+.playback-settings{margin-top:1rem; padding-top:.85rem; border-top:1px solid var(--app-rim-soft)}
+.speed-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:.4rem}
+.speed-option{padding:.45rem .3rem; color:var(--text-dim); border:1px solid var(--app-rim); border-radius:10px; background:var(--app-surface-2); cursor:pointer; font:inherit; font-size:.7rem; font-variant-numeric:tabular-nums; transition:color .2s,background .2s,border-color .2s,transform .2s}
+.speed-option:hover,.speed-option:focus-visible{color:var(--app-ink); border-color:color-mix(in srgb,var(--accent) 42%,transparent); transform:translateY(-1px)}
+.speed-option.selected{color:var(--app-ink); border-color:color-mix(in srgb,var(--accent) 52%,transparent); background:linear-gradient(135deg,var(--accent-soft),var(--accent-faint)); box-shadow:inset 0 1px 0 color-mix(in srgb,var(--app-ink) 16%,transparent)}
+.sleep-label{margin-top:.8rem}
+.sleep-remaining{margin:.55rem 0 0; color:var(--accent); font-size:.7rem; font-variant-numeric:tabular-nums}
+.appearance-link{display:flex; align-items:center; gap:.55rem; width:100%; margin-top:1rem; padding:.65rem .7rem; color:var(--text-dim); border:1px solid var(--app-rim); border-radius:12px; background:var(--app-surface-2); cursor:pointer; font:inherit; font-size:.76rem; text-align:left; transition:color .2s,background .2s,border-color .2s,transform .2s}
+.appearance-link:hover,.appearance-link:focus-visible{color:var(--app-ink); border-color:color-mix(in srgb,var(--accent) 42%,transparent); background:linear-gradient(135deg,var(--accent-soft),var(--accent-faint)); transform:translateY(-1px)}
+.appearance-link .icon{color:var(--accent)}
+.shortcuts-modal{width:min(390px,100%)}
+.shortcut-list{display:flex; flex-direction:column}
+.shortcut-row{display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.52rem .15rem; border-top:1px solid var(--app-rim-soft); color:var(--text-dim); font-size:.76rem}
+.shortcut-row:first-child{border-top:0}
+.shortcut-keys{display:flex; gap:.3rem}
+.shortcut-keys kbd{min-width:1.7rem; padding:.24rem .4rem; color:var(--app-ink); border:1px solid var(--app-rim); border-bottom-color:color-mix(in srgb,var(--app-ink) 26%,transparent); border-radius:7px; background:var(--app-surface); box-shadow:inset 0 -1px 0 var(--app-rim-soft); font:600 .68rem ui-monospace,SFMono-Regular,Consolas,monospace; text-align:center}
+.theme-option>span:nth-child(2){min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 @keyframes appearance-fade{from{opacity:0}to{opacity:1}}
 @keyframes appearance-in{from{opacity:0; transform:translateY(10px) scale(.97)}to{opacity:1; transform:translateY(0) scale(1)}}
 .profile-settings-modal{width:min(390px,100%)}
@@ -195,10 +255,10 @@ h2{font-size:1.2rem; margin:0 0 .9rem}
 
 /* kezdőoldal */
 .discover{max-width:980px; margin:0 auto}
-.welcome{min-height:210px; display:flex; align-items:center; justify-content:space-between; overflow:hidden; position:relative; padding:1.6rem 2rem; margin:-.2rem -.4rem 1.8rem; border-radius:22px; background:linear-gradient(110deg,color-mix(in srgb,var(--violet) 25%,transparent),color-mix(in srgb,var(--cyan) 7%,transparent)); border:1px solid rgba(255,255,255,.12); animation:hero-card-in .8s cubic-bezier(.22,1,.36,1) both}
-.welcome::before{content:""; position:absolute; inset:-45% -25%; z-index:0; pointer-events:none; background:linear-gradient(116deg,transparent 36%,rgba(255,255,255,.02) 43%,rgba(255,255,255,.16) 49%,rgba(255,255,255,.04) 55%,transparent 63%); filter:blur(14px); transform:translateX(-72%) rotate(2deg); opacity:0; animation:hero-reflection 1.5s cubic-bezier(.22,1,.36,1) .45s both}
+.welcome{min-height:210px; display:flex; align-items:center; justify-content:space-between; overflow:hidden; position:relative; padding:1.6rem 2rem; margin:-.2rem -.4rem 1.8rem; border-radius:24px; background:linear-gradient(118deg,color-mix(in srgb,var(--accent) 13%,transparent),color-mix(in srgb,var(--accent-2) 6%,transparent) 54%,transparent); border:1px solid var(--app-rim); box-shadow:inset 0 1px 0 color-mix(in srgb,var(--app-ink) 14%,transparent),0 18px 44px var(--shadow); animation:hero-card-in .8s cubic-bezier(.22,1,.36,1) both}
+.welcome::before{content:""; position:absolute; inset:-45% -25%; z-index:0; pointer-events:none; background:linear-gradient(116deg,transparent 36%,rgba(255,255,255,.015) 43%,color-mix(in srgb,var(--app-ink) 10%,transparent) 49%,rgba(255,255,255,.025) 55%,transparent 63%); filter:blur(14px); transform:translateX(-72%) rotate(2deg); opacity:0; animation:hero-reflection 1.8s cubic-bezier(.22,1,.36,1) .45s both}
 .hero-copy{position:relative; z-index:1}
-.greeting{width:max-content; max-width:100%; overflow:hidden; margin:0 0 .7rem; color:rgba(255,255,255,.9); font-family:inherit; font-size:clamp(1.35rem,3vw,2rem); font-style:normal; font-weight:700; letter-spacing:-.06em; line-height:1.1; white-space:nowrap; animation:hero-item-in .55s cubic-bezier(.22,1,.36,1) .7s both}
+.greeting{width:max-content; max-width:100%; overflow:hidden; margin:0 0 .7rem; color:color-mix(in srgb,var(--app-ink) 92%,transparent); font-family:inherit; font-size:clamp(1.35rem,3vw,2rem); font-style:normal; font-weight:600; letter-spacing:-.045em; line-height:1.1; white-space:nowrap; animation:hero-item-in .55s cubic-bezier(.22,1,.36,1) .7s both}
 .greeting span{display:block; color:inherit; animation:greeting-shimmer .8s ease-out .78s both}
 @keyframes hero-card-in{from{opacity:0; transform:translateY(12px)}to{opacity:1; transform:translateY(0)}}
 @keyframes hero-reflection{0%{opacity:0; transform:translateX(-72%) rotate(2deg)}18%{opacity:.9}100%{opacity:0; transform:translateX(72%) rotate(2deg)}}
@@ -208,12 +268,12 @@ h2{font-size:1.2rem; margin:0 0 .9rem}
 @keyframes orb-reflection-in{from{opacity:0; transform:scale(.94)}to{opacity:1; transform:scale(1)}}
 .eyebrow{color:rgba(255,255,255,.55); font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; margin:0 0 .45rem}
 .hero-copy>.eyebrow{animation:hero-item-in .55s cubic-bezier(.22,1,.36,1) .98s both}
-.welcome h1{font-size:clamp(2.2rem,5vw,3.8rem); line-height:.98; letter-spacing:-.06em; margin:0}
-.hero-line{display:inline-block; color:transparent; background:linear-gradient(110deg,#fff 8%,#fff 32%,color-mix(in srgb,var(--cyan) 76%,white 24%) 49%,#fff 65%,color-mix(in srgb,var(--violet) 78%,white 22%) 88%); background-size:240% 100%; background-position:0 50%; -webkit-background-clip:text; background-clip:text; animation:hero-title-in .8s cubic-bezier(.22,1,.36,1) 1.16s both,hero-title-sheen 5.2s cubic-bezier(.4,0,.2,1) 2.05s infinite}
+.welcome h1{font-family:var(--font-display); font-weight:500; font-size:clamp(2.2rem,5vw,3.8rem); line-height:.98; letter-spacing:-.045em; margin:0}
+.hero-line{display:inline-block; color:transparent; background:linear-gradient(108deg,color-mix(in srgb,var(--app-ink) 97%,white 3%) 12%,color-mix(in srgb,var(--accent) 52%,var(--app-ink) 48%) 52%,color-mix(in srgb,var(--app-ink) 92%,white 8%) 88%); background-size:240% 100%; background-position:0 50%; -webkit-background-clip:text; background-clip:text; animation:hero-title-in .8s cubic-bezier(.22,1,.36,1) 1.16s both,hero-title-sheen 7s cubic-bezier(.4,0,.2,1) 2.05s infinite}
 @keyframes hero-title-in{from{opacity:0; clip-path:inset(0 100% 0 0); filter:blur(8px); transform:translateY(10px)}to{opacity:1; clip-path:inset(0 0 0 0); filter:blur(0); transform:translateY(0)}}
 @keyframes hero-title-sheen{0%,100%{background-position:0 50%; filter:brightness(1); text-shadow:0 0 0 transparent}46%{background-position:100% 50%; filter:brightness(1.09); text-shadow:0 0 24px color-mix(in srgb,var(--cyan) 16%,transparent),0 0 44px color-mix(in srgb,var(--violet) 10%,transparent)}}
 .welcome-copy{max-width:360px; color:var(--text-dim); line-height:1.5; font-size:.88rem; margin:1rem 0 0; animation:hero-item-in .55s cubic-bezier(.22,1,.36,1) 1.52s both}
-.welcome-orb{position:relative; z-index:1; width:190px; height:190px; border-radius:50%; margin-right:1rem; background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.65),transparent 16%),linear-gradient(145deg,color-mix(in srgb,var(--violet) 70%,white 30%),var(--cyan) 56%,var(--pink)); box-shadow:-20px 24px 70px color-mix(in srgb,var(--cyan) 25%,transparent),inset -18px -20px 30px color-mix(in srgb,var(--violet) 35%,transparent),inset 12px 10px 20px rgba(255,255,255,.2); transform:rotate(-18deg); animation:hero-orb-in .8s cubic-bezier(.22,1,.36,1) 1.55s both}
+.welcome-orb{position:relative; z-index:1; width:190px; height:190px; border-radius:50%; margin-right:1rem; background:radial-gradient(circle at 30% 25%,color-mix(in srgb,var(--app-ink) 58%,transparent),transparent 16%),linear-gradient(145deg,color-mix(in srgb,var(--accent) 58%,var(--app-bg) 42%),color-mix(in srgb,var(--accent-2) 62%,var(--app-bg) 38%) 56%,color-mix(in srgb,var(--violet) 42%,var(--app-bg) 58%)); box-shadow:-20px 24px 70px color-mix(in srgb,var(--accent-2) 18%,transparent),inset -18px -20px 30px color-mix(in srgb,var(--app-bg) 45%,transparent),inset 12px 10px 20px color-mix(in srgb,var(--app-ink) 16%,transparent); transform:rotate(-18deg); animation:hero-orb-in .8s cubic-bezier(.22,1,.36,1) 1.55s both}
 .welcome-orb::before{content:""; position:absolute; inset:-5px; border-radius:inherit; pointer-events:none; border:1px solid rgba(255,255,255,.24); box-shadow:0 0 22px color-mix(in srgb,var(--cyan) 12%,transparent); opacity:0; animation:orb-reflection-in .8s ease-out 1.8s both}
 .welcome-orb span{display:block; width:45%; height:12%; margin:38% auto; border-radius:50%; background:rgba(255,255,255,.18); filter:blur(7px); transform:rotate(-35deg)}
 .welcome-orb.has-avatar{overflow:hidden; position:relative; transform:none; background:var(--app-bg); box-shadow:-20px 24px 70px color-mix(in srgb,var(--cyan) 25%,transparent),inset 0 1px 0 rgba(255,255,255,.5),0 0 0 1px rgba(255,255,255,.2)}
@@ -244,6 +304,13 @@ h2{font-size:1.2rem; margin:0 0 .9rem}
 .mood-card>span:nth-child(2){display:flex; flex-direction:column; gap:.18rem; min-width:0}
 .mood-card strong{font-size:.78rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .mood-arrow{display:grid; place-items:center; margin-left:auto; color:rgba(255,255,255,.45)}
+.recent-row{display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:.65rem}
+.recent-card{display:flex; flex-direction:column; gap:.32rem; min-width:0; padding:.5rem; color:var(--app-ink); text-align:left; font:inherit; border:1px solid var(--app-rim-soft); border-radius:14px; background:var(--app-surface-2); cursor:pointer; transition:background .2s,border-color .2s,transform .2s}
+.recent-card:hover,.recent-card.active{border-color:var(--app-rim); background:linear-gradient(135deg,var(--accent-soft),var(--accent-faint)); transform:translateY(-2px)}
+.recent-card .cover{width:100%; height:auto; aspect-ratio:1; border-radius:10px}
+.recent-card strong,.recent-card small{max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.recent-card strong{font-size:.74rem; font-weight:600}
+.recent-card small{color:var(--text-dim); font-size:.66rem}
 
 /* táblázat */
 table{width:100%; border-collapse:collapse}
@@ -394,6 +461,7 @@ mark{background:none; color:var(--pink); font-weight:bold}
   .welcome-copy{max-width:68%; font-size:.78rem; line-height:1.4; margin-top:.8rem}
   .welcome-orb{position:absolute; right:-2.5rem; bottom:-1.6rem; width:132px; height:132px; margin:0; opacity:.82}
   .release-list,.mood-row{grid-template-columns:1fr}
+  .recent-row{grid-template-columns:repeat(3,minmax(0,1fr))}
   .section-heading{align-items:center; gap:.75rem}
   .section-heading h2{font-size:1.1rem}
   .section-heading .text-link{white-space:nowrap}

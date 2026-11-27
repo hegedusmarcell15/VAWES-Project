@@ -32,7 +32,7 @@ function getHeadline(language) {
 
 function DiscoverHome() {
   const { catalog, status } = useCatalog()
-  const { current } = usePlayerState()
+  const { current, recent } = usePlayerState()
   const { play } = usePlayerActions()
   const { language, t, playlistName } = useLanguage()
   const { user } = useAuth()
@@ -52,6 +52,10 @@ function DiscoverHome() {
   }, [])
   const releases = catalog.songs.slice(0, 5)
   const featured = catalog.playlists.slice(0, 4)
+  const recentSongs = recent
+    .map((id) => catalog.songs.find((song) => String(song.id) === String(id)))
+    .filter(Boolean)
+    .slice(0, 6)
   if (status === 'loading') return <CatalogSkeleton rows={5} />
 
   return (
@@ -99,6 +103,29 @@ function DiscoverHome() {
           })}
           </div>}
       </section>
+
+      {recentSongs.length > 0 && (
+        <section className="discover-section">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">{t('forYou')}</p>
+              <h2>{t('recent')}</h2>
+            </div>
+          </div>
+          <div className="recent-row">
+            {recentSongs.map((song) => {
+              const playlist = catalog.playlists.find((p) => String(p.id) === String(song.playlist))
+              return (
+                <button key={song.id} type="button" className={`recent-card ${current.id === song.id ? 'active' : ''}`} onClick={() => play(song)}>
+                  <Cover color={playlist?.color ?? 'violet'} size="md" image={song.cover_url} />
+                  <strong>{song.title}</strong>
+                  <small>{song.artist}</small>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       <section className="discover-section">
         <div className="section-heading">

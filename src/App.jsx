@@ -2,9 +2,11 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { PlayerProvider } from './PlayerContext.jsx'
 import Layout from './components/Layout.jsx'
+import GlassDefs from './components/GlassDefs.jsx'
 import { LanguageProvider } from './LanguageContext.jsx'
 import { CatalogProvider } from './CatalogContext.jsx'
 import { AuthProvider, useAuth } from './AuthContext.jsx'
+import { ThemeProvider } from './ThemeContext.jsx'
 import { isAllowedAdmin } from './adminAccess.js'
 
 const Home = lazy(() => import('./pages/Home.jsx'))
@@ -43,36 +45,39 @@ function RequireAdmin() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <CatalogProvider>
-        <LanguageProvider>
-          <PlayerProvider>
-            <Suspense fallback={<RouteFallback />}>
-              <Routes>
-                <Route path="/login" element={<AuthPage />} />
-                <Route path="/register" element={<AuthPage />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route element={<RequireAdmin />}>
-                  <Route path="/admin" element={<AdminDashboard />} />
-                </Route>
-                <Route element={<RequireAuth />}>
-                  <Route element={<Layout />}>
-                    <Route index element={<Home />} />
-                    <Route path="lista/:id" element={<Playlist />} />
-                    <Route path="kereses" element={<Search />} />
-                    <Route path="konyvtar" element={<Library />} />
-                    <Route path="kedvencek" element={<Favorites />} />
-                    <Route path="eloado/:id" element={<Artist />} />
-                    <Route path="album/:id" element={<Album />} />
+    <ThemeProvider>
+      <AuthProvider>
+        <CatalogProvider>
+          <LanguageProvider>
+            <PlayerProvider>
+              <GlassDefs />
+              <Suspense fallback={<RouteFallback />}>
+                <Routes>
+                  <Route path="/login" element={<AuthPage />} />
+                  <Route path="/register" element={<AuthPage />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  <Route element={<RequireAdmin />}>
+                    <Route path="/admin" element={<AdminDashboard />} />
                   </Route>
-                </Route>
-              </Routes>
-            </Suspense>
-          </PlayerProvider>
-        </LanguageProvider>
-      </CatalogProvider>
-    </AuthProvider>
+                  <Route element={<RequireAuth />}>
+                    <Route element={<Layout />}>
+                      <Route index element={<Home />} />
+                      <Route path="lista/:id" element={<Playlist />} />
+                      <Route path="kereses" element={<Search />} />
+                      <Route path="konyvtar" element={<Library />} />
+                      <Route path="kedvencek" element={<Favorites />} />
+                      <Route path="eloado/:id" element={<Artist />} />
+                      <Route path="album/:id" element={<Album />} />
+                    </Route>
+                  </Route>
+                </Routes>
+              </Suspense>
+            </PlayerProvider>
+          </LanguageProvider>
+        </CatalogProvider>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }

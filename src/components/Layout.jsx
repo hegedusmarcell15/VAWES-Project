@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, Link, Outlet } from 'react-router-dom'
+import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom'
 import Cover from './Cover.jsx'
 import Player from './Player.jsx'
 import { useCatalog } from '../CatalogContext.jsx'
@@ -7,11 +7,25 @@ import { useLanguage } from '../LanguageContext.jsx'
 import Icon from './Icon.jsx'
 import { useAuth } from '../AuthContext.jsx'
 import { isAllowedAdmin } from '../adminAccess.js'
+import { useTheme } from '../ThemeContext.jsx'
+import { usePlayerActions, usePlayerState } from '../PlayerContext.jsx'
+
+const SLEEP_OPTIONS = [0, 15, 30, 60]
+const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5]
+
+function fmtSleep(ms) {
+  const total = Math.max(0, Math.ceil(ms / 1000))
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
+}
 
 export default function Layout() {
   const { catalog, status, error } = useCatalog()
   const { user, logout } = useAuth()
   const { language, setLanguage, t, playlistName } = useLanguage()
+  const { theme, setTheme, customTheme, updateCustomColor, themes } = useTheme()
+  const { speed, sleepMinutes, sleepRemaining } = usePlayerState()
+  const { setSpeed, setSleepTimer } = usePlayerActions()
+  const navigate = useNavigate()
   const [languageOpen, setLanguageOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false)
@@ -19,27 +33,11 @@ export default function Layout() {
   const [avatarError, setAvatarError] = useState('')
   const [profileError, setProfileError] = useState('')
   const [appearanceOpen, setAppearanceOpen] = useState(false)
-  const [theme, setTheme] = useState(() => localStorage.getItem('vawes-theme') ?? 'aurora')
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [playStyle, setPlayStyle] = useState(() => localStorage.getItem('vawes-play-style') ?? 'prism')
-  const defaultCustomTheme = { label: 'Custom', background: '#0b0a1a', violet: '#7c5cff', cyan: '#2dd4ff', pink: '#ff4fd8' }
-  const [customTheme, setCustomTheme] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('vawes-custom-theme'))
-      const valid = saved && ['background', 'violet', 'cyan', 'pink'].every((key) => /^#[0-9a-f]{6}$/i.test(saved[key]))
-      return valid ? { ...defaultCustomTheme, ...saved } : defaultCustomTheme
-    } catch {
-      return defaultCustomTheme
-    }
-  })
   const languageRef = useRef(null)
   const profileRef = useRef(null)
   const languages = [['hu', 'Magyar'], ['en', 'English'], ['zh', '中文']]
-  const themes = {
-    aurora: { label: 'Aurora', background: '#0b0a1a', violet: '#7c5cff', cyan: '#2dd4ff', pink: '#ff4fd8' },
-    ocean: { label: 'Deep ocean', background: '#06141d', violet: '#4169e1', cyan: '#20d5c2', pink: '#5d8dff' },
-    sunset: { label: 'Sunset glow', background: '#1b0c1a', violet: '#b04dff', cyan: '#ff9b54', pink: '#ff4f9a' },
-    graphite: { label: 'Graphite', background: '#101217', violet: '#737bff', cyan: '#a3b8c8', pink: '#c084fc' },
-  }
   const handleAvatarChange = (event) => {
     const file = event.target.files?.[0]
     event.target.value = ''
@@ -100,21 +98,19 @@ export default function Layout() {
   }
 
   useEffect(() => {
-    const selected = theme === 'custom' ? customTheme : themes[theme] ?? themes.aurora
-    const root = document.documentElement
-    root.style.setProperty('--app-bg', selected.background)
-    root.style.setProperty('--violet', selected.violet)
-    root.style.setProperty('--cyan', selected.cyan)
-    root.style.setProperty('--pink', selected.pink)
-    localStorage.setItem('vawes-theme', theme)
-    localStorage.setItem('vawes-custom-theme', JSON.stringify(customTheme))
-  }, [theme, customTheme])
+    const openShortcuts = () => setShortcutsOpen(true)
+    const focusSearch = () => {
+      navigate('/kereses')
+      window.setTimeout(() => window.dispatchEvent(new CustomEvent('vawes-focus-search-input')), 120)
+    }
+    window.addEventListener('vawes-shortcuts', openShortcuts)
+    window.addEventListener('vawes-focus-search', focusSearch)
+    return () => {
+      window.removeEventListener('vawes-shortcuts', openShortcuts)
+      window.removeEventListener('vawes-focus-search', focusSearch)
+    }
+  }, [navigate])
 
-  const updateCustomColor = (key, value) => {
-    if (!/^#[0-9a-f]{6}$/i.test(value)) return
-    setCustomTheme((current) => ({ ...current, [key]: value }))
-    setTheme('custom')
-  }
   const choosePlayStyle = (next) => {
     setPlayStyle(next)
     localStorage.setItem('vawes-play-style', next)
@@ -132,6 +128,7 @@ export default function Layout() {
         setLanguageOpen(false)
         setProfileOpen(false)
         setAppearanceOpen(false)
+        setShortcutsOpen(false)
       }
     }
     document.addEventListener('keydown', closeAppearance)
@@ -270,8 +267,8 @@ export default function Layout() {
                   className={`theme-option ${theme === id ? 'selected' : ''}`}
                   onClick={() => setTheme(id)}
                 >
-                  <span className="theme-preview" style={{ '--theme-bg': option.background, '--theme-violet': option.violet, '--theme-cyan': option.cyan, '--theme-pink': option.pink }} />
-                  <span>{option.label}</span>
+                  <span className="theme-preview" style={{ '--theme-bg': option.background, '--theme-violet': option.palette.violet, '--theme-cyan': option.palette.cyan, '--theme-pink': option.palette.pink }} />
+                  <span>{t(option.labelKey)}</span>
                   {theme === id && <span className="theme-check"><Icon name="check" size={14} /></span>}
                 </button>
               ))}
@@ -314,7 +311,61 @@ export default function Layout() {
                 ))}
               </div>
             </div>
+            <div className="playback-settings">
+              <p className="appearance-label">{t('playbackSpeed')}</p>
+              <div className="speed-grid">
+                {SPEED_OPTIONS.map((option) => (
+                  <button key={option} type="button" className={`speed-option ${speed === option ? 'selected' : ''}`} onClick={() => setSpeed(option)}>{option}×</button>
+                ))}
+              </div>
+              <p className="appearance-label sleep-label">{t('sleepTimer')}</p>
+              <div className="speed-grid">
+                {SLEEP_OPTIONS.map((minutes) => (
+                  <button
+                    key={minutes}
+                    type="button"
+                    className={`speed-option ${(minutes === 0 ? !sleepMinutes : sleepMinutes === minutes) ? 'selected' : ''}`}
+                    onClick={() => setSleepTimer(minutes)}
+                  >
+                    {minutes === 0 ? t('off') : `${minutes} ${t('minutesShort')}`}
+                  </button>
+                ))}
+              </div>
+              {sleepRemaining > 0 && <p className="sleep-remaining" role="status">{t('sleepEndsIn')} {fmtSleep(sleepRemaining)}</p>}
+            </div>
+            <button type="button" className="appearance-link" onClick={() => { setAppearanceOpen(false); setShortcutsOpen(true) }}>
+              <Icon name="queue" size={15} /><span>{t('keyboardShortcuts')}</span>
+            </button>
             <div className="appearance-row"><span><strong>{t('glassIntensity')}</strong><small>{t('glassIntensityDescription')}</small></span><span className="appearance-badge">{t('active')}</span></div>
+          </section>
+        </div>
+      )}
+      {shortcutsOpen && (
+        <div className="appearance-backdrop" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setShortcutsOpen(false)
+        }}>
+          <section className="appearance-modal shortcuts-modal glass" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
+            <div className="appearance-heading">
+              <div><p className="eyebrow">{t('preferences')}</p><h2 id="shortcuts-title">{t('keyboardShortcuts')}</h2></div>
+              <button className="appearance-close" type="button" aria-label={t('close')} onClick={() => setShortcutsOpen(false)}><Icon name="close" size={17} /></button>
+            </div>
+            <p className="appearance-copy">{t('shortcutsDescription')}</p>
+            <div className="shortcut-list">
+              {[
+                [['Space'], t('shortcutPlayPause')],
+                [['←', '→'], t('shortcutSeek')],
+                [['M'], t('shortcutMute')],
+                [['S'], t('shortcutShuffle')],
+                [['R'], t('shortcutRepeat')],
+                [['/'], t('shortcutSearch')],
+                [['?'], t('shortcutHelp')],
+              ].map(([keys, label]) => (
+                <div className="shortcut-row" key={label}>
+                  <span>{label}</span>
+                  <span className="shortcut-keys">{keys.map((key) => <kbd key={key}>{key}</kbd>)}</span>
+                </div>
+              ))}
+            </div>
           </section>
         </div>
       )}
