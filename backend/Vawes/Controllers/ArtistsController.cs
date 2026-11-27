@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vawes.DTOs;
 using Vawes.Models;
+using Vawes.Security;
 
 namespace Vawes.Controllers;
 
@@ -44,6 +46,41 @@ public sealed class ArtistsController(VaweContext context) : ControllerBase
         return Ok(MapArtist(artist));
     }
 
+    [HttpPut("{id}")]
+    [Authorize(Policy = AdminEmailAllowlist.PolicyName)]
+    public async Task<ActionResult<ArtistResponse>> Update(
+        string id,
+        [FromBody] UpdateArtistRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.Bio?.Length > 2000)
+            return BadRequest(new ProblemDetails { Title = "The artist bio is too long." });
+        if (request.CoverUrl?.Length > 500 || !IsValidHttpUrl(request.CoverUrl))
+            return BadRequest(new ProblemDetails { Title = "Enter a valid HTTP(S) cover image URL." });
+
+        int? numericId = int.TryParse(id, out var parsedId) ? parsedId : null;
+        var artist = await context.Artists
+            .Include(item => item.Albums)
+            .ThenInclude(album => album.Songs)
+            .FirstOrDefaultAsync(
+                item => item.Slug == id || (numericId.HasValue && item.Id == numericId.Value),
+                cancellationToken);
+        if (artist is null) return NotFound();
+
+        artist.Bio = string.IsNullOrWhiteSpace(request.Bio) ? null : request.Bio.Trim();
+        artist.CoverUrl = string.IsNullOrWhiteSpace(request.CoverUrl) ? null : request.CoverUrl.Trim();
+        await context.SaveChangesAsync(cancellationToken);
+
+        return Ok(MapArtist(artist));
+    }
+
+    private static bool IsValidHttpUrl(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return true;
+        return Uri.TryCreate(value.Trim(), UriKind.Absolute, out var uri) &&
+               (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    }
+
     private static ArtistResponse MapArtist(Artist artist) => new(
         artist.Slug ?? artist.Id.ToString(),
         artist.Name,
@@ -56,4 +93,10 @@ public sealed class ArtistsController(VaweContext context) : ControllerBase
                 album.Songs.Sum(song => song.DurationSec),
                 album.CoverUrl))
             .ToArray());
+
+    public sealed class UpdateArtistRequest
+    {
+        public string? Bio { get; set; }
+        public string? CoverUrl { get; set; }
+    }
 }
