@@ -185,7 +185,7 @@ export default function AuthPage() {
           )}
             {!isRegister && (
               <p className="auth-switch" style={{ margin: 0, textAlign: 'right' }}>
-                <Link to="/forgot-password">Forgot password?</Link>
+                <Link to="/forgot-password">{t('forgotTitle')}</Link>
               </p>
             )}
           {(error || authError) && <p className="auth-feedback is-error" role="alert">{error || authError}</p>}

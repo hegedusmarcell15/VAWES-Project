@@ -19,7 +19,7 @@
 .upload-language select,.upload-field input{
   min-width:0;
   color:#fff;
-  background:rgba(9,8,25,.55);
+  background:color-mix(in srgb,var(--field-base) 55%,transparent);
   border:1px solid var(--glass-border);
   border-radius:11px;
   padding:.7rem .8rem;

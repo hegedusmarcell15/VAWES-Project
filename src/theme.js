@@ -243,6 +243,10 @@ export function applyTheme(themeId, customTheme) {
   Object.entries(theme.palette).forEach(([name, value]) => {
     variables[`--${name}`] = value
   })
+  // Text on accent-filled controls (e.g. the sign-in button): pick whichever of white/near-black reads better.
+  const accentStops = [theme.palette.violet, mixHex(theme.palette.cyan, theme.palette.violet, 0.7)]
+  const accentLuminance = accentStops.reduce((sum, hex) => sum + relativeLuminance(hex), 0) / accentStops.length
+  variables['--accent-ink'] = accentLuminance > 0.179 ? '#0b0d10' : '#ffffff'
   Object.entries(variables).forEach(([name, value]) => root.style.setProperty(name, value))
   root.dataset.theme = themeId
   root.dataset.themeTone = theme.isLight ? 'light' : 'dark'
