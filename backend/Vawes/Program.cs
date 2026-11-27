@@ -33,7 +33,6 @@ namespace Vawes
                 client.Timeout = TimeSpan.FromSeconds(3);
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("VAWES/1.0");
             });
-            builder.Services.AddScoped<Vawes.Security.AdminApiKeyFilter>();
 
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>

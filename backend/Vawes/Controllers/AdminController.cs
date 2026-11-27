@@ -153,7 +153,6 @@ public sealed class AdminController(
             databaseConnected,
             smtpConfigured = !string.IsNullOrWhiteSpace(configuration["Email:SmtpHost"]),
             resetUrlConfigured = !string.IsNullOrWhiteSpace(configuration["Frontend:PasswordResetUrl"]),
-            uploadKeyConfigured = !string.IsNullOrWhiteSpace(configuration["Upload:ApiKey"]),
             storageReady = Directory.Exists(musicStorage.RootPath),
             allowedAdmins = adminEmailAllowlist.AllowedEmailCount,
             apiDocsEnabled = true,

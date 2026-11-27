@@ -508,7 +508,6 @@ export default function AdminDashboard() {
             ['adminDatabase', data?.databaseConnected],
             ['adminSmtp', data?.smtpConfigured],
             ['adminResetUrl', data?.resetUrlConfigured],
-            ['adminUploadKey', data?.uploadKeyConfigured],
             ['adminStorage', data?.storageReady],
             ['adminAllowedAdmins', data?.allowedAdmins],
             ['adminApiDocs', data?.apiDocsEnabled],

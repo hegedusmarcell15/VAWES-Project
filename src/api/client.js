@@ -48,9 +48,8 @@ export async function apiList(resource, { search = '', page = 1, size = pageSize
   return apiGet(`${resource}?${params}`, { signal })
 }
 
-export async function uploadSong({ file, key, title, artist, album, genre, onProgress }) {
+export async function uploadSong({ file, title, artist, album, genre, onProgress }) {
   if (!apiBaseUrl) throw new ApiError('VITE_API_BASE_URL is not configured')
-  if (!key.trim()) throw new ApiError('Enter the music administration key.')
 
   const form = new FormData()
   form.append('file', file)
@@ -64,7 +63,6 @@ export async function uploadSong({ file, key, title, artist, album, genre, onPro
     request.withCredentials = true
     request.timeout = 120000
     request.setRequestHeader('Accept', 'application/json')
-    request.setRequestHeader('X-VAWES-API-Key', key)
     request.upload.onprogress = (event) => {
       if (event.lengthComputable) onProgress?.(Math.round((event.loaded / event.total) * 100))
     }
@@ -93,19 +91,16 @@ export async function uploadSong({ file, key, title, artist, album, genre, onPro
   })
 }
 
-export async function updateSong(id, changes, key) {
+export async function updateSong(id, changes) {
   return apiGet(`songs/${encodeURIComponent(id)}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', 'X-VAWES-API-Key': key },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(changes),
   })
 }
 
-export async function deleteSong(id, key) {
-  return apiGet(`songs/${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-    headers: { 'X-VAWES-API-Key': key },
-  })
+export async function deleteSong(id) {
+  return apiGet(`songs/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
 
 export function streamUrl(id) {

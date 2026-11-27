@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError, apiList, audioUrlForSong, deleteSong, uploadSong } from './api/client.js'
+import { useAuth } from './AuthContext.jsx'
+import { isAllowedAdmin } from './adminAccess.js'
 import { useLanguage } from './LanguageContext.jsx'
 
 const pageSize = 100
@@ -55,6 +57,7 @@ function formatSize(bytes) {
 }
 
 export default function UploadPage() {
+  const { user, status } = useAuth()
   const { language, setLanguage, t } = useLanguage()
   const translationRef = useRef(t)
   translationRef.current = t
@@ -62,7 +65,6 @@ export default function UploadPage() {
   const queueRef = useRef([])
   const pendingFileKeys = useRef(new Set())
   const busyRef = useRef(false)
-  const [key, setKey] = useState('')
   const [queue, setQueue] = useState([])
   const [tracks, setTracks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -102,8 +104,8 @@ export default function UploadPage() {
   }, [])
 
   useEffect(() => {
-    refreshTracks()
-  }, [refreshTracks])
+    if (status === 'ready' && isAllowedAdmin(user)) refreshTracks()
+  }, [status, user, refreshTracks])
 
   const addFiles = async (files) => {
     if (busyRef.current) return
@@ -154,11 +156,6 @@ export default function UploadPage() {
     if (busyRef.current || !items.length) return
     setError('')
     setMessage('')
-    if (!key.trim()) {
-      setError(t('uploadKeyRequired'))
-      return
-    }
-
     busyRef.current = true
     setBusy(true)
     items.forEach((item) => updateQueuedFile(item.id, { status: 'uploading', progress: 0, error: '' }))
@@ -172,7 +169,6 @@ export default function UploadPage() {
         try {
           await uploadSong({
             file: item.file,
-            key,
             ...item.metadata,
             onProgress: (progress) => updateQueuedFile(item.id, { progress }),
           })
@@ -209,10 +205,6 @@ export default function UploadPage() {
   }
 
   const handleDelete = async (song) => {
-    if (!key.trim()) {
-      setError(t('uploadKeyRequired'))
-      return
-    }
     if (!window.confirm(t('uploadDeleteConfirm', song.title))) return
 
     setError('')
@@ -220,7 +212,7 @@ export default function UploadPage() {
     setBusy(true)
     busyRef.current = true
     try {
-      await deleteSong(song.id, key)
+      await deleteSong(song.id)
       setMessage(t('uploadDeleteComplete', song.title))
       await refreshTracks()
     } catch (deleteError) {
@@ -237,6 +229,48 @@ export default function UploadPage() {
   const overallProgress = queue.length
   ? Math.round(queue.reduce((total, item) => total + (item.status === 'completed' || item.status === 'failed' ? 100 : item.progress), 0) / queue.length)
     : 0
+
+  if (status === 'loading') {
+    return (
+      <main className="upload-page">
+        <section className="upload-content">
+          <p className="upload-muted" aria-live="polite">{t('catalogLoading')}</p>
+        </section>
+      </main>
+    )
+  }
+
+  if (!isAllowedAdmin(user)) {
+    return (
+      <main className="upload-page">
+        <header className="upload-header">
+          <a className="upload-brand" href="./" aria-label={`VAWES ${t('home')}`}>VAWES</a>
+          <label className="upload-language">
+            <span>{t('language')}</span>
+            <select value={language} onChange={(event) => setLanguage(event.target.value)}>
+              <option value="hu">Magyar</option>
+              <option value="en">English</option>
+              <option value="zh">中文</option>
+            </select>
+          </label>
+        </header>
+        <section className="upload-content">
+          <div className="upload-intro">
+            <p className="upload-eyebrow">VAWES / ADMIN</p>
+            <h1>{t('uploadTitle')}</h1>
+            <p>{t('uploadDescription')}</p>
+          </div>
+          <section className="upload-form glass">
+            <h2>{t('uploadAdminRequired')}</h2>
+            <p className="upload-muted">{t('uploadAdminRequiredHint')}</p>
+            <a className="upload-submit" href={`${import.meta.env.BASE_URL}login`}>
+              {t('uploadSignIn')}
+            </a>
+          </section>
+        </section>
+      </main>
+    )
+  }
 
   return (
     <main className="upload-page">
@@ -260,18 +294,6 @@ export default function UploadPage() {
         </div>
 
         <section className="upload-form glass">
-          <label className="upload-field">
-            <span>{t('uploadApiKey')}</span>
-            <input
-              type="password"
-              autoComplete="off"
-              value={key}
-              onChange={(event) => setKey(event.target.value)}
-              required
-            />
-            <small>{t('uploadApiKeyHint')}</small>
-          </label>
-
           <div
             className={`upload-dropzone ${dragging ? 'is-dragging' : ''}`}
             onDragOver={(event) => { event.preventDefault(); setDragging(true) }}

@@ -32,7 +32,6 @@ services:
       DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?Set DATAPROTECTION_CERTIFICATE_PASSWORD in backend/.env}
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__Mysql: "server=mysql;port=3306;database=${MYSQL_DATABASE:-vawe};user=${MYSQL_USER};password=${MYSQL_PASSWORD}"
-      Upload__ApiKey: ${UPLOAD_API_KEY:?Set UPLOAD_API_KEY in backend/.env}
       Email__SmtpHost: smtp.gmail.com
       Email__SmtpPort: 587
       Email__Username: vawes.notifications@gmail.com

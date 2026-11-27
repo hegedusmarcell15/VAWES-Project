@@ -12,11 +12,10 @@ namespace Vawes.Tests;
 public sealed class MusicUploadTests
 {
     [Fact]
-    public async Task Upload_RequiresAdminKey()
+    public async Task Upload_RequiresAdminLogin()
     {
         using var factory = new VawesApplicationFactory();
         using var client = factory.CreateClient();
-        await SignInAsAdmin(factory, client);
         using var content = new MultipartFormDataContent();
         content.Add(new ByteArrayContent([1, 2, 3]), "file", "track.mp3");
 
@@ -31,7 +30,6 @@ public sealed class MusicUploadTests
         using var factory = new VawesApplicationFactory();
         using var client = factory.CreateClient();
         await SignInAsAdmin(factory, client);
-        client.DefaultRequestHeaders.Add("X-VAWES-API-Key", VawesApplicationFactory.AdminKey);
         using var request = CreateUploadRequest([1, 2, 3], "not-music.txt");
 
         var response = await client.PostAsync("/api/songs", request);
@@ -45,7 +43,6 @@ public sealed class MusicUploadTests
         using var factory = new VawesApplicationFactory();
         using var client = factory.CreateClient();
         await SignInAsAdmin(factory, client);
-        client.DefaultRequestHeaders.Add("X-VAWES-API-Key", VawesApplicationFactory.AdminKey);
         using var request = CreateUploadRequest([1, 2, 3], "corrupt.mp3");
 
         var response = await client.PostAsync("/api/songs", request);
@@ -59,7 +56,6 @@ public sealed class MusicUploadTests
         using var factory = new VawesApplicationFactory();
         using var client = factory.CreateClient();
         await SignInAsAdmin(factory, client);
-        client.DefaultRequestHeaders.Add("X-VAWES-API-Key", VawesApplicationFactory.AdminKey);
         using var request = CreateUploadRequest(CreateMp3Frames(), "sample.mp3");
 
         var uploadResponse = await client.PostAsync("/api/songs", request);
@@ -98,7 +94,6 @@ public sealed class MusicUploadTests
         using var factory = new VawesApplicationFactory();
         using var client = factory.CreateClient();
         await SignInAsAdmin(factory, client);
-        client.DefaultRequestHeaders.Add("X-VAWES-API-Key", VawesApplicationFactory.AdminKey);
 
         using var first = CreateUploadRequest(CreateMp3Frames(), "first.mp3");
         Assert.Equal(HttpStatusCode.Created, (await client.PostAsync("/api/songs", first)).StatusCode);

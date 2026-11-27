@@ -12,7 +12,6 @@ namespace Vawes.Tests;
 
 internal sealed class VawesApplicationFactory : WebApplicationFactory<Vawes.Program>
 {
-    public const string AdminKey = "vawes-test-upload-key";
     private readonly string databaseName = $"vawes-tests-{Guid.NewGuid():N}";
     private readonly string storageDirectory = Path.Combine(
         Path.GetTempPath(), "vawes-tests", Guid.NewGuid().ToString("N"));
@@ -30,7 +29,6 @@ internal sealed class VawesApplicationFactory : WebApplicationFactory<Vawes.Prog
         {
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Upload:ApiKey"] = AdminKey,
                 ["MusicStorage:Directory"] = storageDirectory,
                 ["Admin:AllowedEmails"] = "fxadamg@vawes.app,fxmarcellg@vawes.app,ricsikicsikonyhaja@vawes.app",
             });

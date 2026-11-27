@@ -70,7 +70,7 @@ For databases created before the admin audit log, apply `backend/admin-audit-sch
 
 Administrator status requires both the `is_admin` database flag and an email listed in `Admin:AllowedEmails`. Sign in at `/admin/login` to reach the console at `/admin`, which provides an overview, catalog, artist, user, playlist, upload, audit and status tabs. Links are shareable via `?tab=...`.
 
-Upload requires an administrator session cookie and the `Upload:ApiKey` value. It is available inside the console and at the standalone `/upload.html` page.
+Upload requires only an administrator session cookie — sign in at `/login` or `/admin/login` with an allowlisted admin account. No API key is needed. It is available inside the console and at the standalone `/upload.html` page.
 
 ## API documentation
 
