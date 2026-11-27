@@ -9,6 +9,7 @@ import FavoriteButton from '../components/FavoriteButton.jsx'
 import { ArtistLink } from '../components/TrackLinks.jsx'
 import CatalogSkeleton from '../components/CatalogSkeleton.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
+import { useAuth } from '../AuthContext.jsx'
 import Icon from '../components/Icon.jsx'
 
 function getGreeting(t) {
@@ -34,6 +35,8 @@ function DiscoverHome() {
   const { current } = usePlayerState()
   const { play } = usePlayerActions()
   const { language, t, playlistName } = useLanguage()
+  const { user } = useAuth()
+  const displayName = user?.username ?? t('account')
   const [headline, setHeadline] = useState(() => getHeadline(language))
   const headlineLanguage = useRef(language)
   useEffect(() => {
@@ -55,8 +58,8 @@ function DiscoverHome() {
     <div className="discover">
       <section className="welcome">
         <div className="hero-copy">
-          <p className="greeting" aria-label={`${getGreeting(t)}, User`}>
-            <span>{getGreeting(t)}, User</span>
+          <p className="greeting" aria-label={`${getGreeting(t)}, ${displayName}`}>
+            <span>{getGreeting(t)}, {displayName}</span>
           </p>
           <p className="eyebrow">{t('discovery')}</p>
           <h1><span className="hero-line">{headline}</span></h1>

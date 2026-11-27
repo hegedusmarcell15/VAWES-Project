@@ -1,11 +1,12 @@
-
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiGet } from '../api/client.js'
+import { useLanguage } from '../LanguageContext.jsx'
 import Icon from '../components/Icon.jsx'
 import '../auth.css'
 
 export default function ResetPassword() {
+  const { t } = useLanguage()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const token = searchParams.get('token') || ''
@@ -33,23 +34,20 @@ export default function ResetPassword() {
     setSuccess('')
 
     if (password !== confirmPassword) {
-      setError('The passwords do not match.')
+      setError(t('authPasswordMismatch'))
       return
     }
 
     setBusy(true)
 
     try {
-      const result = await apiGet('auth/reset-password', {
+      await apiGet('auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          newPassword: password,
-        }),
+        body: JSON.stringify({ token, newPassword: password }),
       })
 
-      setSuccess(result.message || 'Your password has been reset successfully.')
+      setSuccess(t('resetSuccess'))
       setPassword('')
       setConfirmPassword('')
 
@@ -71,7 +69,7 @@ export default function ResetPassword() {
 
       <header className="auth-header">
         <Link className="auth-brand" to="/">VAWES</Link>
-        <Link className="auth-home" to="/">Home</Link>
+        <Link className="auth-home" to="/">{t('home')}</Link>
       </header>
 
       <section className="auth-card glass" aria-labelledby="reset-title">
@@ -80,24 +78,20 @@ export default function ResetPassword() {
         </div>
 
         <p className="auth-eyebrow">VAWES / ACCOUNT</p>
-        <h1 id="reset-title">Reset password</h1>
-        <p className="auth-description">
-          Choose a new password for your VAWES account.
-        </p>
+        <h1 id="reset-title">{t('resetTitle')}</h1>
+        <p className="auth-description">{t('resetDescription')}</p>
 
         {!token ? (
           <>
-            <p className="auth-feedback is-error" role="alert">
-              The password reset link is missing its token.
-            </p>
+            <p className="auth-feedback is-error" role="alert">{t('resetMissingToken')}</p>
             <p className="auth-switch">
-              <Link to="/forgot-password">Request a new reset link</Link>
+              <Link to="/forgot-password">{t('resetRequestNew')}</Link>
             </p>
           </>
         ) : (
           <form className="auth-form" onSubmit={handleSubmit}>
             <label className="auth-field">
-              <span>New password</span>
+              <span>{t('resetNewPassword')}</span>
               <span className="auth-password-wrap">
                 <input
                   type={visible ? 'text' : 'password'}
@@ -116,13 +110,13 @@ export default function ResetPassword() {
                   onClick={() => setVisible((value) => !value)}
                   disabled={busy || !!success}
                 >
-                  {visible ? 'Hide' : 'Show'}
+                  {visible ? t('authHidePassword') : t('authShowPassword')}
                 </button>
               </span>
             </label>
 
             <label className="auth-field">
-              <span>Confirm new password</span>
+              <span>{t('resetConfirmPassword')}</span>
               <input
                 type={visible ? 'text' : 'password'}
                 autoComplete="new-password"
@@ -135,34 +129,19 @@ export default function ResetPassword() {
               />
             </label>
 
-            <small className="auth-strength">
-              At least 10 characters, including uppercase, lowercase and a number.
-            </small>
+            <small className="auth-strength">{t('resetStrength')}</small>
 
-            {error && (
-              <p className="auth-feedback is-error" role="alert">
-                {error}
-              </p>
-            )}
+            {error && <p className="auth-feedback is-error" role="alert">{error}</p>}
+            {success && <p className="auth-feedback is-success" role="status">{success}</p>}
 
-            {success && (
-              <p className="auth-feedback is-success" role="status">
-                {success}
-              </p>
-            )}
-
-            <button
-              className="auth-submit"
-              type="submit"
-              disabled={busy || !!success}
-            >
-              {busy ? 'Resetting...' : 'Reset password'}
+            <button className="auth-submit" type="submit" disabled={busy || !!success}>
+              {busy ? t('resetSending') : t('resetSubmit')}
             </button>
           </form>
         )}
 
         <p className="auth-switch">
-          <Link to="/login">Back to sign in</Link>
+          <Link to="/login">{t('resetBackToSignIn')}</Link>
         </p>
       </section>
     </main>

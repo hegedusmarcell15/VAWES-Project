@@ -1,11 +1,12 @@
-
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiGet } from '../api/client.js'
+import { useLanguage } from '../LanguageContext.jsx'
 import Icon from '../components/Icon.jsx'
 import '../auth.css'
 
 export default function ForgotPassword() {
+  const { t } = useLanguage()
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -18,13 +19,12 @@ export default function ForgotPassword() {
     setBusy(true)
 
     try {
-      const result = await apiGet('auth/forgot-password', {
+      await apiGet('auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       })
-
-      setSuccess(result.message || 'If an account with that email exists, a password reset link will be sent.')
+      setSuccess(t('forgotSuccess'))
       setEmail('')
     } catch (requestError) {
       setError(requestError.message)
@@ -40,7 +40,7 @@ export default function ForgotPassword() {
 
       <header className="auth-header">
         <Link className="auth-brand" to="/">VAWES</Link>
-        <Link className="auth-home" to="/">Home</Link>
+        <Link className="auth-home" to="/">{t('home')}</Link>
       </header>
 
       <section className="auth-card glass" aria-labelledby="forgot-title">
@@ -49,14 +49,12 @@ export default function ForgotPassword() {
         </div>
 
         <p className="auth-eyebrow">VAWES / ACCOUNT</p>
-        <h1 id="forgot-title">Forgot password?</h1>
-        <p className="auth-description">
-          Enter your account email address. If an account exists, we'll send you a password reset link.
-        </p>
+        <h1 id="forgot-title">{t('forgotTitle')}</h1>
+        <p className="auth-description">{t('forgotDescription')}</p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">
-            <span>Email address</span>
+            <span>{t('forgotEmail')}</span>
             <input
               type="email"
               name="email"
@@ -72,12 +70,12 @@ export default function ForgotPassword() {
           {success && <p className="auth-feedback is-success" role="status">{success}</p>}
 
           <button className="auth-submit" type="submit" disabled={busy}>
-            {busy ? 'Sending...' : 'Send reset link'}
+            {busy ? t('forgotSending') : t('forgotSend')}
           </button>
         </form>
 
         <p className="auth-switch">
-          Remember your password? <Link to="/login">Sign in</Link>
+          {t('forgotBackToSignIn')} <Link to="/login">{t('authLogin')}</Link>
         </p>
       </section>
     </main>

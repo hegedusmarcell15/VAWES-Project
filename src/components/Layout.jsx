@@ -325,6 +325,7 @@ export default function Layout() {
               <div><p className="eyebrow">{t('account')}</p><h2 id="profile-settings-title">{t('profileSettings')}</h2></div>
               <button className="appearance-close" type="button" aria-label={t('close')} onClick={() => setProfileSettingsOpen(false)}><Icon name="close" size={17} /></button>
             </div>
+            <p className="appearance-copy">{t('accountDescription')}</p>
             <div className="profile-editor">
               <span className="profile-avatar profile-avatar-large">{avatar ? <img src={avatar} alt="" /> : <Icon name="user" size={30} />}</span>
               <div><strong>{user?.username}</strong><small>{t('profilePhotoDescription')}</small></div>
