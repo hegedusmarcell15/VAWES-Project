@@ -108,6 +108,7 @@
 .admin-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
 .admin-stats span{display:grid;gap:.2rem;padding:.75rem;border-radius:11px;background:rgba(255,255,255,.04);color:var(--text-dim);font-size:.74rem}
 .admin-stats strong{color:#fff;font-size:1.1rem}
+.admin-stats strong .icon{display:inline-block;vertical-align:-2px}
 .admin-muted{color:var(--text-dim);font-size:.8rem}
 .admin-table-wrap{max-height:320px;overflow:auto}
 .admin-table{width:100%;border-collapse:collapse;font-size:.78rem}

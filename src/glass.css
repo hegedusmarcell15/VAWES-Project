@@ -97,7 +97,7 @@ body{margin:0; font-family:Arial, Helvetica, sans-serif; color:#fff; background:
 .language-menu{position:absolute; right:0; bottom:calc(100% + .5rem); width:138px; padding:.3rem; overflow:hidden; border:1px solid rgba(255,255,255,.2); border-radius:14px; background:var(--menu-bg); -webkit-backdrop-filter:blur(20px) saturate(150%); backdrop-filter:blur(20px) saturate(150%); box-shadow:0 12px 30px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.22); animation:language-menu-in .16s ease-out both}
 .language-option{display:flex; align-items:center; justify-content:space-between; width:100%; padding:.55rem .6rem; color:rgba(255,255,255,.72); border:0; border-radius:9px; background:transparent; cursor:pointer; font:inherit; font-size:.75rem; text-align:left; transition:background .15s,color .15s}
 .language-option:hover,.language-option:focus,.language-option.selected{color:#fff; background:rgba(255,255,255,.13)}
-.language-check{color:var(--cyan); font-size:.85rem}
+.language-check{display:inline-flex; align-items:center; color:var(--cyan)}
 @keyframes language-menu-in{from{opacity:0; transform:translateY(.3rem) scale(.97)}to{opacity:1; transform:translateY(0) scale(1)}}
 .profile-area{position:relative; margin-top:auto; padding-top:.8rem; border-top:1px solid rgba(255,255,255,.1); z-index:5}
 .profile-trigger{display:flex; align-items:center; gap:.55rem; width:100%; padding:.55rem .45rem; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:14px; background:linear-gradient(135deg,rgba(255,255,255,.1),rgba(255,255,255,.035)); box-shadow:inset 0 1px 0 rgba(255,255,255,.16); cursor:pointer; font:inherit; text-align:left; transition:background .2s,border-color .2s,box-shadow .2s,transform .2s}
@@ -131,7 +131,7 @@ body{margin:0; font-family:Arial, Helvetica, sans-serif; color:#fff; background:
 .theme-option{position:relative; display:flex; align-items:center; gap:.6rem; padding:.55rem; color:rgba(255,255,255,.78); border:1px solid rgba(255,255,255,.13); border-radius:14px; background:rgba(255,255,255,.05); cursor:pointer; font:inherit; font-size:.75rem; text-align:left; transition:background .2s,border-color .2s,transform .2s}
 .theme-option:hover,.theme-option.selected{color:#fff; background:linear-gradient(135deg,var(--accent-soft),var(--accent-faint)); border-color:color-mix(in srgb,var(--cyan) 42%,white 10%); box-shadow:0 5px 16px color-mix(in srgb,var(--violet) 12%,transparent); transform:translateY(-1px)}
 .theme-preview{width:2.35rem; height:1.9rem; flex-shrink:0; border-radius:9px; background:radial-gradient(circle at 70% 30%,var(--theme-pink),transparent 40%),radial-gradient(circle at 25% 70%,var(--theme-cyan),transparent 45%),var(--theme-bg); box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
-.theme-check{margin-left:auto; color:var(--cyan); font-size:.9rem}
+.theme-check{margin-left:auto; display:inline-flex; align-items:center; color:var(--cyan)}
 .custom-colors{margin-top:1rem; padding-top:.85rem; border-top:1px solid rgba(255,255,255,.1)}
 .appearance-label{margin:0 0 .45rem; color:var(--text-dim); font-size:.68rem; letter-spacing:.08em; text-transform:uppercase}
 .color-control{display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.32rem 0; color:rgba(255,255,255,.8); font-size:.75rem}
@@ -288,7 +288,7 @@ mark{background:none; color:var(--pink); font-weight:bold}
 .sort-menu{position:absolute; right:0; top:calc(100% + .45rem); width:220px; padding:.3rem; overflow:hidden; border:1px solid rgba(255,255,255,.2); border-radius:14px; background:var(--menu-bg); -webkit-backdrop-filter:blur(20px) saturate(150%); backdrop-filter:blur(20px) saturate(150%); box-shadow:0 12px 30px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.22); animation:language-menu-in .16s ease-out both}
 .sort-option{display:flex; align-items:center; justify-content:space-between; width:100%; padding:.55rem .6rem; color:rgba(255,255,255,.72); border:0; border-radius:9px; background:transparent; cursor:pointer; font:inherit; font-size:.8rem; text-align:left; transition:background .15s,color .15s}
 .sort-option:hover,.sort-option:focus,.sort-option.selected{color:#fff; background:rgba(255,255,255,.13)}
-.sort-check{color:var(--cyan); font-size:.85rem}
+.sort-check{display:inline-flex; align-items:center; color:var(--cyan)}
 .tools .field:last-child{margin-left:auto; width:220px}
 
 .tiles{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:.9rem}
@@ -357,6 +357,9 @@ mark{background:none; color:var(--pink); font-weight:bold}
 .release:nth-child(3),.mood-card:nth-child(3),.tile:nth-child(3){animation-delay:.12s}
 .release:nth-child(4),.mood-card:nth-child(4),.tile:nth-child(4){animation-delay:.18s}
 .icon{display:block; flex-shrink:0; transition:transform .2s cubic-bezier(.22,1,.36,1)}
+.icon-check{color:var(--cyan)}
+#playBtn .icon-play{transform:translateX(1px)}
+#playBtn .icon-pause{transform:scale(.94)}
 .text-link:hover .icon{transform:translateX(3px)}
 .mood-card:hover .icon{transform:translate(2px,-2px)}
 

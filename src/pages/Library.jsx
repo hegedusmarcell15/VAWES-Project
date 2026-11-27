@@ -5,6 +5,7 @@ import { useCatalog } from '../CatalogContext.jsx'
 import CatalogSkeleton from '../components/CatalogSkeleton.jsx'
 import { useLanguage } from '../LanguageContext.jsx'
 import { useAuth } from '../AuthContext.jsx'
+import Icon from '../components/Icon.jsx'
 
 function SortPicker({ value, onChange, options, label }) {
   const [open, setOpen] = useState(false)
@@ -46,7 +47,7 @@ function SortPicker({ value, onChange, options, label }) {
               }}
             >
               <span>{optionLabel}</span>
-              {value === key && <span className="sort-check" aria-hidden="true">✓</span>}
+              {value === key && <span className="sort-check" aria-hidden="true"><Icon name="check" size={14} /></span>}
             </button>
           ))}
         </div>

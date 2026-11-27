@@ -11,10 +11,10 @@ const tabs = [
   { id: 'overview', label: 'adminTabOverview', icon: 'shield' },
   { id: 'catalog', label: 'adminTabCatalog', icon: 'search' },
   { id: 'artists', label: 'adminTabArtists', icon: 'user' },
-  { id: 'albums', label: 'adminTabAlbums', icon: 'settings' },
-  { id: 'users', label: 'adminTabUsers', icon: 'user' },
-  { id: 'playlists', label: 'adminTabPlaylists', icon: 'settings' },
-  { id: 'upload', label: 'adminTabUpload', icon: 'plus' },
+  { id: 'albums', label: 'adminTabAlbums', icon: 'disc' },
+  { id: 'users', label: 'adminTabUsers', icon: 'users' },
+  { id: 'playlists', label: 'adminTabPlaylists', icon: 'queue' },
+  { id: 'upload', label: 'adminTabUpload', icon: 'upload' },
   { id: 'audit', label: 'adminTabAudit', icon: 'shield' },
   { id: 'status', label: 'adminTabStatus', icon: 'globe' },
 ]
@@ -399,7 +399,7 @@ export default function AdminDashboard() {
           <td>{album.artist}</td>
           <td>{album.release_year || '—'}</td>
           <td>{album.tracks}</td>
-          <td><Badge ok={Boolean(album.cover_url)} trueLabel="✓" falseLabel="—" /></td>
+          <td><Badge ok={Boolean(album.cover_url)} trueLabel={<Icon name="check" size={13} />} falseLabel="—" /></td>
           <td className="admin-actions">
             <button type="button" onClick={() => beginEdit('album', album)}>{t('adminEdit')}</button>
             <button type="button" onClick={() => refreshArtwork('album', album)} disabled={busy}>{t('adminRefreshArtwork')}</button>
@@ -422,7 +422,7 @@ export default function AdminDashboard() {
         <tr key={item.id}>
           <td>{item.username}</td>
           <td>{item.email}</td>
-          <td><Badge ok={item.isAdmin} trueLabel="✓" falseLabel="—" /></td>
+          <td><Badge ok={item.isAdmin} trueLabel={<Icon name="check" size={13} />} falseLabel="—" /></td>
           <td>{formatDate(item.last_login_at)}</td>
           <td className="admin-actions">
             <button type="button" onClick={() => toggleAdmin(item)} disabled={busy}>
@@ -523,7 +523,7 @@ export default function AdminDashboard() {
           <div className="admin-stats admin-stats-wide">
             {entries.map(([label, value]) => (
               <span key={label}>
-                <strong>{typeof value === 'boolean' ? (value ? '✓' : '—') : (value ?? '—')}</strong>
+                <strong>{typeof value === 'boolean' ? (value ? <Icon name="check" size={13} /> : '—') : (value ?? '—')}</strong>
                 {t(label)}
               </span>
             ))}

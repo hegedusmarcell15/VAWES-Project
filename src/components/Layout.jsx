@@ -188,7 +188,7 @@ export default function Layout() {
                       }}
                     >
                       <span>{name}</span>
-                      {language === code && <span className="language-check" aria-hidden="true">✓</span>}
+                      {language === code && <span className="language-check" aria-hidden="true"><Icon name="check" size={14} /></span>}
                     </button>
                   ))}
                 </div>
@@ -220,7 +220,7 @@ export default function Layout() {
                       </button>
                     ))}
                     <button type="button" className="profile-option profile-signout" role="menuitem" onClick={handleSignOut}>
-                      <Icon name="user" size={15} /><span>{t('signOut')}</span>
+                      <Icon name="logout" size={15} /><span>{t('signOut')}</span>
                     </button>
                   </>
                 ) : (
@@ -272,7 +272,7 @@ export default function Layout() {
                 >
                   <span className="theme-preview" style={{ '--theme-bg': option.background, '--theme-violet': option.violet, '--theme-cyan': option.cyan, '--theme-pink': option.pink }} />
                   <span>{option.label}</span>
-                  {theme === id && <span className="theme-check">✓</span>}
+                  {theme === id && <span className="theme-check"><Icon name="check" size={14} /></span>}
                 </button>
               ))}
               <button
@@ -282,7 +282,7 @@ export default function Layout() {
               >
                 <span className="theme-preview" style={{ '--theme-bg': customTheme.background, '--theme-violet': customTheme.violet, '--theme-cyan': customTheme.cyan, '--theme-pink': customTheme.pink }} />
                 <span>{t('customTheme')}</span>
-                {theme === 'custom' && <span className="theme-check">✓</span>}
+                {theme === 'custom' && <span className="theme-check"><Icon name="check" size={14} /></span>}
               </button>
             </div>
             <div className="custom-colors">

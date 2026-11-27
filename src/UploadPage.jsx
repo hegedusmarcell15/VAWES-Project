@@ -3,6 +3,7 @@ import { ApiError, apiList, audioUrlForSong, deleteSong, uploadSong } from './ap
 import { useAuth } from './AuthContext.jsx'
 import { isAllowedAdmin } from './adminAccess.js'
 import { useLanguage } from './LanguageContext.jsx'
+import Icon from './components/Icon.jsx'
 
 const pageSize = 100
 const maximumFileBytes = 50 * 1024 * 1024
@@ -306,7 +307,7 @@ export default function UploadPage() {
               addFiles(event.dataTransfer.files)
             }}
           >
-            <span className="upload-drop-icon" aria-hidden="true">♫</span>
+            <span className="upload-drop-icon" aria-hidden="true"><Icon name="music" size={26} /></span>
             <strong>{t('uploadDrop')}</strong>
             <span>{t('uploadFileHint')}</span>
             <button type="button" className="upload-secondary" onClick={() => fileInputRef.current?.click()} disabled={busy}>
