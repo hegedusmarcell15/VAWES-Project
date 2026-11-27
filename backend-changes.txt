@@ -1,1 +1,0 @@
-git diff main..origin/main -- backend/docker-compose.yml backend/Vawes/Dockerfile backend/Vawes/Program.cs
