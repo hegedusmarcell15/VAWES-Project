@@ -89,7 +89,7 @@ export default function AuthPage() {
                   autoComplete="username"
                   minLength={3}
                   maxLength={50}
-                  pattern="[\p{L}\p{N}._-]{3,50}"
+                  pattern="[\p{L}\p{N}.\_\-]{3,50}"
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
                   required

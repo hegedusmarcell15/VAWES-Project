@@ -11,13 +11,14 @@ const loadSavedPlayer = (songs) => {
   try {
     const saved = JSON.parse(localStorage.getItem('vawes-player') ?? '{}')
     return {
+      trackId: saved.trackId,
       current: songs.find((song) => song.id === saved.trackId) ?? songs[0],
       elapsed: Number.isFinite(saved.position) && saved.position >= 0 ? saved.position : 0,
       volume: Number.isFinite(saved.volume) ? Math.min(1, Math.max(0, saved.volume)) : 0.8,
       muted: Boolean(saved.muted),
     }
   } catch {
-    return { current: songs[0], elapsed: 0, volume: 0.8, muted: false }
+    return { trackId: null, current: songs[0], elapsed: 0, volume: 0.8, muted: false }
   }
 }
 
@@ -27,7 +28,10 @@ export function PlayerProvider({ children }) {
   const { catalog } = useCatalog()
   const songs = catalog.songs
   const [saved] = useState(() => loadSavedPlayer(songs))
-  const [current, setCurrent] = useState(saved.current)
+  const [currentId, setCurrentId] = useState(saved.trackId ?? saved.current?.id ?? null)
+  // Derive the active song from the catalog so an async catalog load can never
+  // leave the player holding an undefined song.
+  const current = songs.find((song) => song.id === currentId) ?? songs[0] ?? null
   const [playing, setPlaying] = useState(false)
   const [elapsed, setElapsed] = useState(saved.elapsed)
   const [duration, setDuration] = useState(saved.current?.duration_sec ?? 0)
@@ -51,7 +55,7 @@ export function PlayerProvider({ children }) {
     const audio = audioRef.current
     const requestId = ++requestIdRef.current
     pendingSeekRef.current = Math.max(0, position)
-    setCurrent(song)
+    setCurrentId(song?.id ?? null)
     setElapsed(Math.max(0, position))
     setDuration(song?.duration_sec ?? 0)
     setStatus('loading')
@@ -124,6 +128,7 @@ export function PlayerProvider({ children }) {
 
   const step = useCallback((direction) => {
     const queue = queueRef.current.length ? queueRef.current : songs
+    if (!current || queue.length === 0) return
     const index = queue.findIndex((song) => song.id === current.id)
     if (direction < 0 && historyRef.current.length) {
       const previousId = historyRef.current.pop()
@@ -197,7 +202,7 @@ export function PlayerProvider({ children }) {
       setElapsed(position)
       try {
         localStorage.setItem('vawes-player', JSON.stringify({
-          trackId: currentRef.current.id,
+          trackId: currentRef.current?.id,
           position,
           volume: audio.volume,
           muted: audio.muted,
@@ -257,7 +262,7 @@ export function PlayerProvider({ children }) {
     }
     try {
       localStorage.setItem('vawes-player', JSON.stringify({
-        trackId: current.id,
+        trackId: current?.id,
         position: elapsed,
         volume,
         muted,
@@ -290,7 +295,7 @@ export function PlayerProvider({ children }) {
   }, [elapsed, seek, toggle])
 
   useEffect(() => {
-    if (!('mediaSession' in navigator)) return
+    if (!current || !('mediaSession' in navigator)) return
     const mediaSession = navigator.mediaSession
     if (typeof MediaMetadata !== 'undefined') {
       mediaSession.metadata = new MediaMetadata({

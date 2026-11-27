@@ -18,6 +18,9 @@ export default function Player() {
     window.addEventListener('vawes-play-style-change', updateStyle)
     return () => window.removeEventListener('vawes-play-style-change', updateStyle)
   }, [])
+
+  if (!current) return null
+
   const color = catalog.playlists.find((p) => String(p.id) === String(current.playlist))?.color ?? 'violet'
   const pct = duration ? Math.min(100, (elapsed / duration) * 100) : 0
   const repeatLabel = repeat === 'one' ? t('repeatOne') : repeat === 'all' ? t('repeatAll') : t('repeatOff')
